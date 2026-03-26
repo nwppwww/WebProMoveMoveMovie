@@ -9,7 +9,7 @@ const LocationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, toast } = useAppContext();
-  
+
   const [loc, setLoc] = useState(null);
   const [ads, setAds] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -30,7 +30,7 @@ const LocationPage = () => {
         document.title = `Move³Movie | ${data.name || 'สถานที่'}`;
         setAds(AdController.list().filter(a => !a.hidden)); // In a real app, distance based
         setReviews(ReviewController.list(parsedId));
-        
+
         // Find movies featuring this location
         const dbMovies = MovieController.list();
         const relatedMovies = dbMovies.filter(m => MovieController.scenes(m.id).some(s => s.locationId === parsedId));
@@ -42,15 +42,19 @@ const LocationPage = () => {
     return () => { document.title = 'Move³Movie'; };
   }, [id]);
 
-  const submitReview = (e) => {
+  const submitReview = async (e) => {
     e.preventDefault();
     if (!user) return toast('กรุณาเข้าสู่ระบบก่อนเขียนรีวิว', 'error');
     if (!reviewText || !reviewStars) return toast('กรุณาระบุคะแนนและข้อความ', 'error');
 
-    const nw = ReviewController.add({ userId: user.id, userName: user.name, locationId: parseInt(id), rating: reviewStars, comment: reviewText });
-    setReviews([nw, ...reviews]);
-    setReviewText(''); setReviewStars(0);
-    toast('บันทึกรีวิวสำเร็จ');
+    try {
+      const nw = await ReviewController.add({ userId: user.id, userName: user.name, locationId: parseInt(id), rating: reviewStars, comment: reviewText });
+      setReviews(prev => [nw, ...prev]);
+      setReviewText(''); setReviewStars(0);
+      toast('บันทึกรีวิวสำเร็จ');
+    } catch (err) {
+      toast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+    }
   };
 
   if (loading) {
@@ -68,7 +72,7 @@ const LocationPage = () => {
       <div style={{ textAlign: 'center', padding: '120px 20px', color: 'var(--muted)' }}>
         <h2>ไม่พบข้อมูลสถานที่</h2>
         <button className="btn-ghost" onClick={() => navigate('/map')} style={{ marginTop: 20, padding: '10px 24px', borderRadius: 20 }}>
-           กลับไปหน้าแผนที่
+          กลับไปหน้าแผนที่
         </button>
       </div>
     );
@@ -84,14 +88,14 @@ const LocationPage = () => {
 
       <div className="animate-fadeUp">
         <div style={{ display: 'flex', flexDirection: 'column', md: { flexDirection: 'row' }, gap: 40, marginBottom: 60 }}>
-          
+
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
               <span className="badge"><MapPin size={12} style={{ display: 'inline', marginRight: 4 }} /> {loc.province}</span>
               {loc.type && <span className="badge badge-gray"><Tag size={12} style={{ display: 'inline', marginRight: 4 }} /> {loc.type}</span>}
               <span className="badge" style={{ background: 'rgba(232,160,32,-9)', color: 'var(--gold)' }}><Star size={12} style={{ display: 'inline', marginRight: 4 }} /> {avgRating}</span>
             </div>
-            
+
             <h1 className="font-serif" style={{ fontSize: 'clamp(32px, 4vw, 42px)', margin: '0 0 16px', lineHeight: 1.2 }}>{loc.name}</h1>
             <p style={{ color: '#A8A5B4', lineHeight: 1.85, fontSize: 15, marginBottom: 36, maxWidth: 680 }}>
               {loc.description || 'ไม่มีคำอธิบาย'}
@@ -101,7 +105,7 @@ const LocationPage = () => {
               <div style={{ marginBottom: 40 }}>
                 <LeafletMap locations={[loc]} center={[loc.lat, loc.lng]} zoom={15} height={300} />
                 <div style={{ marginTop: 16 }}>
-                  <a 
+                  <a
                     href={`https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`}
                     target="_blank"
                     rel="noreferrer"
@@ -118,7 +122,7 @@ const LocationPage = () => {
             {ads.length > 0 && (
               <div style={{ background: 'linear-gradient(45deg, rgba(232,160,32,.08), rgba(232,160,32,.02))', border: '1px solid rgba(232,160,32,.2)', borderRadius: 16, padding: 24, marginBottom: 40 }}>
                 <h3 className="font-serif" style={{ color: 'var(--gold)', fontSize: 18, marginBottom: 16 }}>
-                  <Compass size={18} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle' }} /> 
+                  <Compass size={18} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle' }} />
                   สถานที่หรือโปรโมชั่นใกล้เคียง
                 </h3>
                 <div style={{ display: 'grid', gap: 16 }}>
@@ -131,7 +135,7 @@ const LocationPage = () => {
                 </div>
               </div>
             )}
-            
+
           </div>
 
           <div style={{ width: '100%', maxWidth: 320 }}>
@@ -164,7 +168,7 @@ const LocationPage = () => {
               {user ? (
                 <form onSubmit={submitReview}>
                   <div style={{ marginBottom: 16 }}>
-                     <Stars val={reviewStars} onChange={setReviewStars} size={24} />
+                    <Stars val={reviewStars} onChange={setReviewStars} size={24} />
                   </div>
                   <Field>
                     <textarea placeholder="บรรยากาศเป็นอย่างไรบ้าง..." className="inp" value={reviewText} onChange={e => setReviewText(e.target.value)} />
@@ -187,23 +191,30 @@ const LocationPage = () => {
           <h2 className="font-serif" style={{ fontSize: 24, marginBottom: 24 }}>รีวิวจากผู้ใช้งาน ({reviews.length})</h2>
           {reviews.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-              {reviews.map(r => (
-                <div key={r.id} style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 16, padding: '20px 24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(232,160,32,.1)', color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
-                        {r.userName?.charAt(0) || 'U'}
+                {reviews.map(r => {
+                  const dateVal = r.createdAt || r.createdat;
+                  const nameVal = r.userName || r.username || 'ผู้ใช้แอป';
+                  
+                  return (
+                    <div key={r.id} style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 16, padding: '20px 24px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(232,160,32,.1)', color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+                            {nameVal.charAt(0)}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 14 }}>{nameVal}</div>
+                            <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                              {dateVal ? new Date(dateVal).toLocaleDateString('th-TH') : 'เมื่อสักครู่'}
+                            </div>
+                          </div>
+                        </div>
+                        <Stars val={r.rating} size={14} readonly />
                       </div>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 14 }}>{r.userName || 'ผู้ใช้แอป'}</div>
-                        <div style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.createdAt).toLocaleDateString('th-TH')}</div>
-                      </div>
+                      <p style={{ color: '#EDE9E3', fontSize: 14, lineHeight: 1.6, margin: 0 }}>"{r.comment}"</p>
                     </div>
-                    <Stars val={r.rating} size={14} readonly />
-                  </div>
-                  <p style={{ color: '#EDE9E3', fontSize: 14, lineHeight: 1.6, margin: 0 }}>"{r.comment}"</p>
-                </div>
-              ))}
+                  );
+                })}
             </div>
           ) : (
             <div style={{ padding: '40px', textAlign: 'center', background: 'var(--bg-card)', borderRadius: 16, border: '1px dashed rgba(255,255,255,.1)' }}>
