@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = 'https://dbxerewphusfequsqthz.supabase.co';
+const supabaseKey = 'sb_publishable_8hLBy1wLAbZQ-jeHrac-ag_FNg32_LK';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -30,24 +30,49 @@ export const initDB = async () => {
       supabase.from('points').select('*')
     ]);
 
-    if (!uRes.error) memoryDB.users = uRes.data || [];
-    if (!mRes.error) memoryDB.movies = mRes.data || [];
-    if (!lRes.error) memoryDB.locations = lRes.data || [];
-    if (!sRes.error) memoryDB.scenes = sRes.data || [];
-    if (!rvRes.error) memoryDB.reviews = rvRes.data || [];
-    if (!rwRes.error) memoryDB.rewards = rwRes.data || [];
-    if (!aRes.error) memoryDB.ads = aRes.data || [];
+    if (mRes.error) console.error('Supabase Error (movies): ' + mRes.error.message);
+    if (lRes.error) console.error('Supabase Error (locations): ' + lRes.error.message);
+    if (sRes.error) console.error('Supabase Error (scenes): ' + sRes.error.message);
+
+    // Normalize keys (PostgreSQL lowercases column names)
+    const normalize = (list) => (list || []).map(item => {
+      const obj = {};
+      Object.keys(item).forEach(k => {
+        // Map common lowercased keys to CamelCase required by the App
+        let key = k;
+        if (k === 'movieid') key = 'movieId';
+        if (k === 'locationid') key = 'locationId';
+        if (k === 'userid') key = 'userId';
+        if (k === 'username') key = 'userName';
+        if (k === 'createdat') key = 'createdAt';
+        if (k === 'partnerid') key = 'partnerId';
+        if (k === 'releaseyear') key = 'releaseYear';
+        if (k === 'imgurl') key = 'imgUrl';
+        obj[key] = item[k];
+      });
+      return obj;
+    });
+
+    memoryDB.users = normalize(uRes.data);
+    memoryDB.movies = normalize(mRes.data);
+    memoryDB.locations = normalize(lRes.data);
+    memoryDB.scenes = normalize(sRes.data);
+    memoryDB.reviews = normalize(rvRes.data);
+    memoryDB.rewards = normalize(rwRes.data);
+    memoryDB.ads = normalize(aRes.data);
     
     // Process points into key-value map
     if (!pRes.error) {
       const pmap = {};
-      (pRes.data || []).forEach(p => pmap[p.userId] = p.amount);
+      (pRes.data || []).forEach(p => {
+         const uid = p.userId || p.userid;
+         pmap[uid] = p.amount;
+      });
       memoryDB.points = pmap;
     }
-
-    console.log('✅ Supabase initialized & cached', memoryDB);
+    console.log('✅ Supabase initialized', memoryDB);
   } catch (error) {
-    console.error('❌ Failed to initialize Supabase:', error);
+    console.error('❌ Failed to connect to Supabase:', error);
   }
 };
 
@@ -88,7 +113,12 @@ export const PointController = {
 export const MovieController = {
   list() { return memoryDB.movies; },
   get(id) { return memoryDB.movies.find(m => m.id === parseInt(id)); },
-  scenes(movieId) { return memoryDB.scenes.filter(s => s.movieId === parseInt(movieId)); },
+  scenes(movieId) { 
+    // PostgreSQL usually lowercases column names like 'movieId' to 'movieid' 
+    return memoryDB.scenes.filter(s => 
+      (s.movieId === parseInt(movieId)) || (s.movieid === parseInt(movieId))
+    ); 
+  },
   async add(data) {
     const dDate = { ...data, createdAt: new Date().toISOString() };
     const { data: res, error } = await supabase.from('movies').insert(dDate).select().single();

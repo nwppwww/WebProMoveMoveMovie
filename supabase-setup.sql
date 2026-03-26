@@ -1,5 +1,15 @@
--- 🎬 Move³Movie : Supabase Schema Setup --
+-- 🎬 Move³Movie : Supabase Schema Setup (Clean Version) --
 -- 🚀 Copy and paste this entire script into your Supabase SQL Editor and hit RUN!
+
+-- 0. Clean old tables if they exist
+DROP TABLE IF EXISTS ads CASCADE;
+DROP TABLE IF EXISTS rewards CASCADE;
+DROP TABLE IF EXISTS reviews CASCADE;
+DROP TABLE IF EXISTS scenes CASCADE;
+DROP TABLE IF EXISTS locations CASCADE;
+DROP TABLE IF EXISTS movies CASCADE;
+DROP TABLE IF EXISTS points CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
 -- 1. Create tables
 CREATE TABLE users (

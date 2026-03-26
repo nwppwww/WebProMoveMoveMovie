@@ -71,12 +71,17 @@ export const LeafletMap = ({ locations = [], center, zoom = 13, height = 350, on
       if (!loc.lat || !loc.lng) return;
       const marker = L.marker([loc.lat, loc.lng], { icon: goldIcon }).addTo(map);
       marker.bindPopup(`
-        <div style="padding:4px;font-family:DM Sans,sans-serif;">
-          <strong style="color:#E8A020;font-size:14px;">${loc.name || loc.locationName}</strong>
-          <br><span style="color:#7A7990;font-size:12px;">${loc.province || ''}</span>
-          ${loc.description ? `<br><span style="color:#A8A5B4;font-size:12px;margin-top:4px;display:block;">${loc.description.substring(0,80)}...</span>` : ''}
+        <div style="padding:10px;font-family:DM Sans,sans-serif;min-width:180px;">
+          <strong style="color:#E8A020;font-size:15px;display:block;margin-bottom:4px;">${loc.name || loc.locationName}</strong>
+          <span style="color:#7A7990;font-size:13px;display:block;margin-bottom:12px;">📍 ${loc.province || ''}</span>
+          ${loc.description ? `<p style="color:#A8A5B4;font-size:13px;margin:0 0 12px;line-height:1.5;max-height:80px;overflow:hidden;">${loc.description.substring(0,80)}...</p>` : ''}
+          <a 
+            href="https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}" 
+            target="_blank" 
+            style="display:inline-block;padding:8px 14px;background:rgba(232,160,32,.15);color:#E8A020;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;width:100%;text-align:center;box-sizing:border-box;border:1px solid rgba(232,160,32,.3);"
+          >📍 นำทางด้วย Google Maps</a>
         </div>
-      `, { className: 'map-popup' });
+      `, { className: 'map-popup', maxWidth: 300 });
       if (onMarkerClick) marker.on('click', () => onMarkerClick(loc));
     });
 
@@ -90,6 +95,60 @@ export const LeafletMap = ({ locations = [], center, zoom = 13, height = 350, on
   }, [locations, center, zoom]);
 
   return <div ref={mapRef} style={{ height, borderRadius: 16, border: '1px solid rgba(232,160,32,.15)' }} />;
+};
+
+export const MapPicker = ({ lat, lng, onPick, height = 280 }) => {
+  const pickerMapRef = useRef(null);
+  const pickerMapInstance = useRef(null);
+  const makerInstance = useRef(null);
+
+  useEffect(() => {
+    if (!pickerMapRef.current || !window.L || pickerMapInstance.current) return;
+    const L = window.L;
+    
+    const initialPos = (lat && lng) ? [lat, lng] : [13.7563, 100.5018];
+    const map = L.map(pickerMapRef.current, {
+      zoomControl: false,
+      attributionControl: false,
+    }).setView(initialPos, 13);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const goldIcon = L.divIcon({
+      className: '',
+      html: `<div style="width:28px;height:28px;background:linear-gradient(135deg,#E8A020,#C47010);border-radius:50%;border:4px solid #fff;box-shadow:0 0 20px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:14px;">⭐️</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+    });
+
+    if (lat && lng) {
+      makerInstance.current = L.marker([lat, lng], { icon: goldIcon }).addTo(map);
+    }
+
+    map.on('click', (e) => {
+      const { lat, lng } = e.latlng;
+      if (makerInstance.current) {
+        makerInstance.current.setLatLng(e.latlng);
+      } else {
+        makerInstance.current = L.marker(e.latlng, { icon: goldIcon }).addTo(map);
+      }
+      onPick(lat, lng);
+    });
+
+    pickerMapInstance.current = map;
+    return () => { map.remove(); pickerMapInstance.current = null; };
+  }, []);
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <Label>จิ้มพิกัดบนแผนที่ (หรือจะกรอกเลขข้างล่างเอาเองก็ได้ครับ):</Label>
+      <div ref={pickerMapRef} style={{ height, borderRadius: 12, border: '1px solid rgba(255,255,255,.1)', marginBottom: 8, cursor: 'crosshair' }} />
+      <div style={{ fontSize: 11, color: 'var(--gold)', textAlign: 'center', opacity: 0.8 }}>
+         👆 คลิกเพื่อเปลี่ยนตำแหน่งพิกัดแม่นๆ
+      </div>
+    </div>
+  );
 };
 
 export const ScrollToTop = () => {

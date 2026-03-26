@@ -97,6 +97,17 @@ const LocationPage = () => {
             {loc.lat && loc.lng && (
               <div style={{ marginBottom: 40 }}>
                 <LeafletMap locations={[loc]} center={[loc.lat, loc.lng]} zoom={15} height={300} />
+                <div style={{ marginTop: 16 }}>
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-gold"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 24px', borderRadius: 12, textDecoration: 'none', fontWeight: 600, fontSize: 15 }}
+                  >
+                    <Map size={18} /> นำทางด้วย Google Maps
+                  </a>
+                </div>
               </div>
             )}
 

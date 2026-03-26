@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Megaphone, Plus, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
-import { Modal, Field } from '../components/UI';
+import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { AdController } from '../services/db';
 
@@ -114,6 +114,13 @@ const PartnerPage = () => {
           <Field label="รายละเอียด">
             <textarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="inp" placeholder="รับส่วนลด 20% เมื่อโชว์หน้าแอป..." />
           </Field>
+
+          <MapPicker 
+            lat={formData.lat} 
+            lng={formData.lng} 
+            onPick={(lat, lng) => setFormData({ ...formData, lat, lng })} 
+          />
+
           <div style={{ display: 'flex', gap: 16 }}>
              <Field label="ละติจูดเป้าหมาย"><input type="number" step="0.0001" value={formData.lat || ''} onChange={e => setFormData({ ...formData, lat: parseFloat(e.target.value) })} className="inp" /></Field>
              <Field label="ลองจิจูดเป้าหมาย"><input type="number" step="0.0001" value={formData.lng || ''} onChange={e => setFormData({ ...formData, lng: parseFloat(e.target.value) })} className="inp" /></Field>

@@ -1,13 +1,10 @@
-import React from 'react';
-import { User, Gift, Clock, Star } from 'lucide-react';
-import { useAppContext } from '../context/AppContext';
-import { PointController } from '../services/db';
+import { Navigate } from 'react-router-dom';
 
 const ProfilePage = () => {
   const { user } = useAppContext();
   const pts = PointController.get(user?.id);
 
-  if (!user) return null;
+  if (!user) return <Navigate to="/auth" replace />;
 
   return (
     <div style={{ maxWidth: 800, margin: '140px auto 100px', padding: '0 24px' }}>

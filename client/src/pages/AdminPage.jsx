@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Trash2, Edit2, Plus, Users, Film, MapPin, LayoutDashboard, Megaphone } from 'lucide-react';
-import { Modal, Field } from '../components/UI';
+import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { UserDB, MovieController, LocationController, AdController } from '../services/db';
 
@@ -212,6 +212,13 @@ const AdminPage = () => {
               <Field label="ชื่อสถานที่"><input required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="inp" /></Field>
               <Field label="จังหวัด"><input required value={formData.province || ''} onChange={e => setFormData({ ...formData, province: e.target.value })} className="inp" /></Field>
               <Field label="ประเภท"><input required value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })} className="inp" placeholder="Temple, Beach, Cafe..."/></Field>
+              
+              <MapPicker 
+                lat={formData.lat} 
+                lng={formData.lng} 
+                onPick={(lat, lng) => setFormData({ ...formData, lat, lng })} 
+              />
+
               <div style={{ display: 'flex', gap: 16 }}>
                 <Field label="ละติจูด (Lat)"><input type="number" step="0.0001" required value={formData.lat || ''} onChange={e => setFormData({ ...formData, lat: parseFloat(e.target.value) })} className="inp" /></Field>
                 <Field label="ลองจิจูด (Lng)"><input type="number" step="0.0001" required value={formData.lng || ''} onChange={e => setFormData({ ...formData, lng: parseFloat(e.target.value) })} className="inp" /></Field>
