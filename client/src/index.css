@@ -99,7 +99,7 @@ body::after {
 }
 
 /* Leaflet maps global overrides */
-.leaflet-container { @apply bg-card !important rounded-2xl border border-gold/15; }
+.leaflet-container { @apply !bg-card rounded-2xl border border-gold/15; }
 .map-popup .leaflet-popup-content-wrapper { @apply bg-card text-main border border-gold/20 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)]; }
 .map-popup .leaflet-popup-tip { @apply bg-card; }
 
