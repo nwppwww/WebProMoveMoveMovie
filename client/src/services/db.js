@@ -340,5 +340,56 @@ export const ReviewController = {
 };
 
 export const UserDB = {
-  list() { return memoryDB.users; }
+  list() { return memoryDB.users; },
+  async updateName(userId, newName) {
+    const u = memoryDB.users.find(x => x.id === parseInt(userId));
+    if (!u) throw new Error('ไม่พบข้อมูลผู้ใช้');
+    
+    const oldName = u.name;
+    if (oldName === newName) return u;
+
+    // 1. Update users table
+    const { data: res, error } = await supabase
+      .from('users')
+      .update({ name: newName })
+      .eq('id', userId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+
+    // 2. Record name history
+    // Note: Column names are old_name and new_name as per our SQL setup
+    const { error: hError } = await supabase.from('name_history').insert({
+      userid: userId,
+      old_name: oldName,
+      new_name: newName
+    });
+
+    if (hError) {
+      console.error('❌ Failed to record name history:', hError.message);
+    }
+
+    const normalized = normalize([res])[0];
+    const idx = memoryDB.users.findIndex(x => x.id === parseInt(userId));
+    if (idx !== -1) memoryDB.users[idx] = normalized;
+    
+    return normalized;
+  },
+  async getNameHistory(userId) {
+    const { data, error } = await supabase
+      .from('name_history')
+      .select('*')
+      .eq('userid', userId)
+      .order('changed_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return data.map(h => ({
+      id: h.id,
+      oldName: h.old_name || h.oldname,
+      newName: h.new_name || h.newname,
+      changedAt: h.changed_at || h.changedat
+    }));
+  }
 };

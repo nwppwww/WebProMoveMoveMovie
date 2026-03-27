@@ -104,3 +104,38 @@ body::after {
 .map-popup .leaflet-popup-tip { @apply bg-card; }
 
 select option { @apply bg-card text-main; }
+
+/* 📊 Tables & Admin Lists */
+table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1rem; }
+th { @apply text-left py-4 px-4 text-muted font-semibold text-[13px] border-b border-white/5 uppercase tracking-wider bg-[#090915]; }
+td { @apply py-4 px-4 text-[14.5px] border-b border-white/5 font-medium text-white/90; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* 🏗️ Layout & Navigation components */
+.tab-item { @apply px-5 py-2.5 rounded-xl text-muted text-[14px] font-medium transition-all hover:bg-white/5 cursor-pointer flex items-center gap-2; }
+.tab-item.active { @apply bg-gold text-[#07070F] font-bold shadow-[0_10px_25px_rgba(232,160,32,0.28)]; }
+
+/* 🎨 Shared UI Particles */
+.badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gold/10 text-gold border border-gold/25 uppercase tracking-wider; }
+.badge-gray { @apply bg-white/5 text-muted border-white/10 opacity-70; }
+.badge-green { @apply bg-green-500/10 text-green-400 border-green-500/20; }
+
+.inp { @apply w-full bg-[#1A1A24] border border-white/10 rounded-xl px-4 py-3 text-main outline-none focus:border-gold/50 focus:ring-4 focus:ring-gold/5 transition-all placeholder:text-muted/40; }
+
+/* 🔘 Buttons */
+.btn-gold { @apply bg-gold text-[#07070F] font-bold transition-all hover:scale-[1.03] active:scale-[0.98] hover:shadow-[0_12px_32px_rgba(232,160,32,0.3)] disabled:opacity-40 disabled:hover:scale-100; }
+.btn-ghost { @apply bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition-all active:scale-[0.98] border border-white/5; }
+.btn-danger { @apply bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all font-semibold; }
+
+/* 🖼️ Modals & Overlays */
+.modal-overlay { @apply fixed inset-0 z-[8000] bg-black/85 backdrop-blur-[6px] flex items-center justify-center p-6 animate-fade-in; }
+.modal-box { @apply bg-[#0D0D1A] border border-white/10 rounded-[32px] w-full max-w-[620px] p-8 max-h-[92vh] overflow-y-auto shadow-[0_40px_100px_rgba(0,0,0,0.8)] animate-fade-up; }
+
+/* 💬 Feedback & Interaction */
+.confirm-dialog-overlay { @apply fixed inset-0 z-[9000] bg-black/65 backdrop-blur-[3px] flex items-center justify-center p-6 animate-fade-in; }
+.confirm-dialog-box { @apply bg-[#121220] border border-white/10 rounded-[28px] w-full max-w-[440px] p-8 shadow-[0_32px_80px_rgba(0,0,0,0.8)] animate-fade-up; }
+
+.scroll-top { @apply fixed right-8 bottom-8 z-[5000] w-12 h-12 bg-gold text-[#07070F] rounded-full flex items-center justify-center text-[20px] shadow-2xl transition-all opacity-0 pointer-events-none hover:scale-115 shadow-gold/20; }
+.scroll-top.visible { @apply opacity-100 pointer-events-auto; }
+.toast { @apply fixed bottom-8 left-1/2 -translate-x-1/2 z-[10000] px-7 py-4 rounded-[22px] flex items-center gap-3 shadow-[0_20px_60px_rgba(0,0,0,0.6)] font-semibold min-w-[340px] justify-center text-[15px]; }

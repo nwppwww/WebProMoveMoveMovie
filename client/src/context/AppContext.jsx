@@ -41,10 +41,17 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('mmm_user', JSON.stringify(targetUser));
   }, []);
 
+  // Update current user info (e.g. after name change)
+  const updateUser = useCallback((newData) => {
+    const updated = { ...user, ...newData };
+    setUser(updated);
+    localStorage.setItem('mmm_user', JSON.stringify(updated));
+  }, [user]);
+
   return (
     <AppContext.Provider value={{ 
       user, login, logout, toast, toastData, setToastData, 
-      confirm, confirmData, setConfirmData, impersonate 
+      confirm, confirmData, setConfirmData, impersonate, updateUser 
     }}>
       {children}
     </AppContext.Provider>

@@ -1,44 +1,164 @@
 import React from 'react';
-import { User, Gift, Clock, Star } from 'lucide-react';
+import { User, Gift, Clock, Star, Edit2, Check, X } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { PointController } from '../services/db';
+import { PointController, UserDB } from '../services/db';
 
 const ProfilePage = () => {
-  const { user } = useAppContext();
+  const { user, toast, updateUser } = useAppContext();
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [newName, setNewName] = React.useState(user?.name || '');
+  const [history, setHistory] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
   const pts = PointController.get(user?.id);
 
+  const fetchHistory = React.useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await UserDB.getNameHistory(user.id);
+      setHistory(data);
+    } catch (err) {
+      console.error('Failed to fetch name history:', err);
+    }
+  }, [user]);
+
+  React.useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  // Sync newName when user data changes (e.g. initial load)
+  React.useEffect(() => {
+    if (user?.name) setNewName(user.name);
+  }, [user?.name]);
+
   if (!user) return <Navigate to="/auth" replace />;
+
+  const [formError, setFormError] = React.useState('');
+
+  const handleUpdateName = async (e) => {
+    if (e) e.preventDefault();
+    setFormError('');
+
+    if (!newName.trim()) {
+      setFormError('กรุณาระบุชื่อที่ต้องการเปลี่ยน');
+      return;
+    }
+    if (newName.trim() === user.name) {
+      setIsEditing(false);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const updated = await UserDB.updateName(user.id, newName.trim());
+      updateUser(updated);
+      toast('เปลี่ยนชื่อสำเร็จแล้ว! ประวัติการเปลี่ยนของคุณถูกบันทึกเรียบร้อย');
+      setIsEditing(false);
+      fetchHistory(); 
+    } catch (err) {
+      console.error('Update name error:', err);
+      let errMsg = err.message || 'บันทึกข้อมูลไม่สำเร็จ';
+      
+      // Translate common Supabase/Postgres errors to Thai
+      if (errMsg.includes('Permission denied')) errMsg = 'ไม่มีสิทธิ์บันทึกข้อมูล (กรุณาเช็คการตั้งค่า RLS ใน Supabase)';
+      if (errMsg.includes('foreign key constraint')) errMsg = 'ไม่พบข้อมูลผู้ใช้ในระบบหลัก';
+      if (errMsg.includes('network')) errMsg = 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (Network Error)';
+      
+      setFormError(errMsg);
+      toast(errMsg, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-[800px] mx-auto mt-[140px] mb-[100px] px-6">
       <div className="animate-fade-up">
         
         <div className="flex items-center gap-6 mb-10 pb-10 border-b border-white/10 max-md:flex-col max-md:text-center max-md:gap-4 max-md:pb-6">
-          <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-gold to-gold-dim text-[#07070F] flex items-center justify-center text-[40px] font-bold shrink-0">
+          <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-gold to-gold-dim text-[#07070F] flex items-center justify-center text-[40px] font-bold shrink-0 shadow-[0_0_30px_rgba(232,160,32,0.15)]">
             {user?.name?.charAt(0)?.toUpperCase() || '?'}
           </div>
-          <div>
-            <div className="flex items-center gap-3 mb-1.5 max-md:justify-center">
-              <h1 className="font-serif text-[32px] m-0">{user.name}</h1>
-              <span className="badge badge-gray">{user.role}</span>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1.5 max-md:justify-center min-h-[48px]">
+              {isEditing ? (
+                <div className="flex-1 max-w-[400px]">
+                  <form onSubmit={handleUpdateName} className="flex items-center gap-2 animate-fade-in w-full">
+                    <input 
+                      className="inp py-2 px-4 text-[22px] font-serif flex-1 border-gold/50 shadow-[0_0_15px_rgba(232,160,32,0.1)] transition-all focus:border-gold" 
+                      value={newName} 
+                      onChange={e => { setNewName(e.target.value); setFormError(''); }}
+                      autoFocus
+                      placeholder="ใส่ชื่อใหม่ของคุณ..."
+                      disabled={loading}
+                    />
+                    <div className="flex gap-1">
+                      <button type="submit" disabled={loading} className="w-10 h-10 flex items-center justify-center bg-gold text-[#07070F] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg" title="บันทึก">
+                        <Check size={20} strokeWidth={3} />
+                      </button>
+                      <button type="button" onClick={() => { setIsEditing(false); setNewName(user.name); setFormError(''); }} className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all" title="ยกเลิก">
+                        <X size={20} />
+                      </button>
+                    </div>
+                  </form>
+                  {formError && <div className="text-[#FF6B6B] text-[12px] mt-1.5 animate-fade-in flex items-center gap-1">⚠ {formError}</div>}
+                </div>
+              ) : (
+                <>
+                  <h1 className="font-serif text-[32px] m-0 leading-tight">{user.name}</h1>
+                  <button onClick={() => setIsEditing(true)} className="w-8 h-8 flex items-center justify-center text-white/30 hover:text-gold hover:bg-gold/10 rounded-lg transition-all" title="แก้ไขชื่อ">
+                    <Edit2 size={16} />
+                  </button>
+                  <span className="badge badge-gray px-2.5 py-0.5 text-[11px] uppercase tracking-wider">{user.role}</span>
+                </>
+              )}
             </div>
             <div className="text-muted text-[16px] flex items-center gap-1.5 mb-3 max-md:justify-center">
-              <User size={16} /> {user.email}
+              <User size={15} className="opacity-60" /> {user.email}
             </div>
-            <div className="bg-gold/10 border border-gold/20 rounded-[20px] px-4 py-1 inline-flex items-center gap-2 text-gold font-semibold max-md:mx-auto">
-              <Star size={16} className="fill-gold" /> แต้มสะสม: {pts} แต้ม
+            <div className="bg-gold/10 border border-gold/20 rounded-[24px] px-4 py-1 inline-flex items-center gap-2 text-gold font-semibold max-md:mx-auto text-[14px]">
+              <Star size={14} className="fill-gold" /> {pts} แต้มสะสม
             </div>
           </div>
         </div>
 
-        <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2 max-md:justify-center">
-          <Clock size={24} className="text-gold" /> กิจกรรมล่าสุด
-        </h2>
-        <div className="bg-card border border-white/5 rounded-2xl p-8 text-center">
-          <Gift size={48} className="text-white/10 mx-auto mb-4" />
-          <div className="text-[16px] text-muted mb-1">ยังไม่มีประวัติการแลกของรางวัล หรือเขียนรีวิว</div>
-          <div className="text-[14px] text-white/20">สะสมแต้มจากการแชร์ประสบการณ์ แล้วนำมาแลกรางวัลได้เลย!</div>
+        <div className="grid grid-cols-2 gap-8 max-md:grid-cols-1">
+          <div>
+            <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
+              <Clock size={24} className="text-gold" /> กิจกรรมล่าสุด
+            </h2>
+            <div className="bg-card border border-white/5 rounded-2xl p-8 text-center min-h-[220px] flex flex-col justify-center">
+              <Gift size={48} className="text-white/10 mx-auto mb-4" />
+              <div className="text-[16px] text-muted mb-1">ยังไม่มีประวัติการแลกของรางวัล</div>
+              <div className="text-[14px] text-white/20">สะสมแต้มจากการเข้าร่วมกิจกรรมและนำมาแลกรางวัล!</div>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
+              <Clock size={24} className="text-white/40" /> ประวัติการเปลี่ยนชื่อ
+            </h2>
+            <div className="bg-card border border-white/5 rounded-2xl p-4 min-h-[220px]">
+              {history.length > 0 ? (
+                <div className="space-y-4">
+                  {history.map(h => (
+                    <div key={h.id} className="border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="text-[14px] font-medium text-white/80">{h.oldName} → {h.newName}</div>
+                        <div className="text-[11px] text-muted">{new Date(h.changedAt).toLocaleDateString('th-TH')}</div>
+                      </div>
+                      <div className="text-[11px] text-white/20">เปลี่ยนเมื่อ {new Date(h.changedAt).toLocaleTimeString('th-TH')}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center opacity-40 py-8">
+                  <User size={32} className="mb-2" />
+                  <div className="text-[13px]">ยังไม่มีประวัติการเปลี่ยนชื่อ</div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         
       </div>
