@@ -58,9 +58,6 @@ const MoviesPage = () => {
               <div className="pt-[140%] relative">
                 <img src={m.poster} alt={m.title} className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[rgba(7,7,15,0.9)] via-transparent to-transparent opacity-80" />
-                <div className="absolute bottom-3 left-3.5">
-                  <span className="bg-gold/90 text-[#07070F] px-[8px] py-[2px] rounded-md text-[11px] font-bold">★ 4.8</span>
-                </div>
               </div>
               <div className="px-3.5 py-3.5">
                 <div className="font-semibold text-[15px] mb-1 truncate">{m.title}</div>

@@ -347,14 +347,19 @@ export const ConfirmDialog = ({ data, onConfirm, onCancel }) => {
   );
 };
 
+import ReactDOM from 'react-dom';
+
 export const Modal = ({ open, onClose, title, children }) => {
+  const boxRef = useRef(null);
+
   // Lock body scroll when modal open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
       // Scroll modal content to top when opened
-      const box = document.querySelector('.modal-box');
-      if (box) box.scrollTop = 0;
+      setTimeout(() => {
+        if (boxRef.current) boxRef.current.scrollTop = 0;
+      }, 10);
     } else {
       document.body.style.overflow = '';
     }
@@ -362,16 +367,17 @@ export const Modal = ({ open, onClose, title, children }) => {
   }, [open]);
 
   if (!open) return null;
-  return (
+  return ReactDOM.createPortal(
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box">
+      <div className="modal-box" ref={boxRef}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
           <h3 className="font-serif" style={{ fontSize:20, color:'var(--color-main)' }}>{title}</h3>
-          <button onClick={onClose} className="btn-ghost" style={{ borderRadius:8, width:32, height:32, fontSize:16 }}>✕</button>
+          <button type="button" onClick={onClose} className="btn-ghost" style={{ borderRadius:8, width:32, height:32, fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

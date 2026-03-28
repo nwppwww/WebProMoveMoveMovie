@@ -69,7 +69,6 @@ const MovieDetailPage = () => {
               <div className="flex flex-wrap gap-6 text-muted text-[14px]">
                 <span className="flex items-center gap-1.5"><Calendar size={16} /> {movie.releaseYear}</span>
                 <span className="flex items-center gap-1.5"><Clock size={16} /> 120 นาที</span>
-                <span className="flex items-center gap-1.5 text-gold"><span className="text-[16px]">★</span> 4.8/5</span>
               </div>
             </div>
           </div>
