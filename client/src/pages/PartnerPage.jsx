@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Megaphone, Plus, Edit2, Trash2, Eye, EyeOff, MapPin } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Megaphone, Plus, Edit2, Trash2, Eye, EyeOff, MapPin, Search, ChevronDown, Check } from 'lucide-react';
 import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
-import { AdController } from '../services/db';
+import { AdController, LocationController, MovieController } from '../services/db';
 
 const PartnerPage = () => {
   const { user, toast } = useAppContext();
@@ -11,6 +11,10 @@ const PartnerPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAd, setEditingAd] = useState(null);
   const [formData, setFormData] = useState({});
+  
+  // Location selection states
+  const [locSearch, setLocSearch] = useState('');
+  const [showLocDropdown, setShowLocDropdown] = useState(false);
 
   if (!user || user.role !== 'partner') {
     return <div className="text-center py-[120px] px-6"><h3 className="text-[20px]">ไม่มีสิทธิ์เข้าถึงหน้านี้ เฉพาะ Partner เท่านั้น</h3></div>;
@@ -19,23 +23,48 @@ const PartnerPage = () => {
   const refresh = () => setUpdater(x => x + 1);
 
   const myAds = AdController.list().filter(a => a.partnerId === user.id);
+  const allLocations = LocationController.list();
+  const allMovies = MovieController.list();
+
+  // Combine locations with their movie titles for easier searching
+  const searchableLocations = useMemo(() => {
+    return allLocations.map(loc => {
+      const movie = allMovies.find(m => m.id === loc.movieId);
+      return {
+        ...loc,
+        movieTitle: movie?.title || 'ไม่พบชื่อเรื่อง'
+      };
+    });
+  }, [allLocations, allMovies]);
+
+  const filteredLocations = useMemo(() => {
+    if (!locSearch) return searchableLocations.slice(0, 10);
+    const s = locSearch.toLowerCase();
+    return searchableLocations.filter(l => 
+      l.name?.toLowerCase().includes(s) || 
+      l.movieTitle?.toLowerCase().includes(s) ||
+      l.province?.toLowerCase().includes(s)
+    ).slice(0, 15);
+  }, [searchableLocations, locSearch]);
 
   const handleEdit = (ad) => {
     setEditingAd(ad);
     setFormData(ad);
+    setLocSearch('');
     setModalOpen(true);
   };
   
   const handleCreate = () => {
     setEditingAd(null);
     setFormData({});
+    setLocSearch('');
     setModalOpen(true);
   };
 
   const handleDelete = (id) => {
-    if (confirm('ยืนยันลบโฆษณานี้?')) {
+    if (window.confirm('ยืนยันลบโฆษณานี้?')) {
       AdController.delete(id);
-      toast('ลบโฆษณาเรียบร้อย');
+      toast('ลบโฆณาเรียบร้อย');
       refresh();
     }
   };
@@ -60,6 +89,16 @@ const PartnerPage = () => {
     } catch(err) {
       toast(err.message || 'บันทึกโฆษณาไม่สำเร็จ', 'error');
     }
+  };
+
+  const selectLocation = (loc) => {
+    setFormData({
+      ...formData,
+      lat: loc.lat,
+      lng: loc.lng
+    });
+    setLocSearch(`${loc.name} (${loc.movieTitle})`);
+    setShowLocDropdown(false);
   };
 
   return (
@@ -116,6 +155,85 @@ const PartnerPage = () => {
           <Field label="รายละเอียด">
             <textarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="inp min-h-[80px]" placeholder="รับส่วนลด 20% เมื่อโชว์หน้าแอป..." />
           </Field>
+
+          {/* New Searchable Location Picker */}
+          <div className="mb-6 relative">
+            <span className="text-[13px] text-muted mb-2 block font-medium">ค้นหาสถานที่ถ่ายทำ (ระบุตำแหน่งอัตโนมัติ)</span>
+            <div className="relative">
+              <input 
+                type="text" 
+                className="inp pr-12" 
+                style={{ paddingLeft: '48px' }}
+                placeholder="พิมพ์ชื่อภาพยนตร์ หรือชื่อสถานที่เพื่อค้นหา..." 
+                value={locSearch}
+                onChange={e => {
+                  setLocSearch(e.target.value);
+                  setShowLocDropdown(true);
+                }}
+                onFocus={() => setShowLocDropdown(true)}
+              />
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none opacity-50" />
+              
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {locSearch && (
+                  <button 
+                    type="button"
+                    title="ล้างการค้นหา"
+                    className="p-1 text-white/20 hover:text-white transition-colors"
+                    onClick={() => {
+                      setLocSearch('');
+                      setFormData({ ...formData, lat: null, lng: null });
+                    }}
+                  >
+                    <Plus size={16} className="rotate-45" />
+                  </button>
+                )}
+                <button 
+                  type="button"
+                  className="p-1 text-muted hover:text-gold transition-colors"
+                  onClick={() => setShowLocDropdown(!showLocDropdown)}
+                >
+                  <ChevronDown size={20} className={`transition-transform duration-200 ${showLocDropdown ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+            </div>
+
+            {showLocDropdown && (
+              <>
+                <div 
+                  className="fixed inset-0 z-[9998]" 
+                  onClick={() => setShowLocDropdown(false)} 
+                />
+                <div className="absolute z-[9999] w-full mt-2 bg-[#1a1b26]/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-fade-in max-h-[300px] overflow-y-auto custom-scrollbar border-t-gold/30">
+                  {filteredLocations.length > 0 ? (
+                    filteredLocations.map(loc => (
+                      <button
+                        key={loc.id}
+                        type="button"
+                        className="w-full px-4 py-3 text-left hover:bg-gold/10 transition-colors flex items-center justify-between group border-b border-white/5 last:border-0"
+                        onClick={() => selectLocation(loc)}
+                      >
+                        <div className="flex-1 min-w-0 pr-4">
+                          <div className="text-[14px] font-semibold text-main truncate group-hover:text-gold transition-colors">{loc.name}</div>
+                          <div className="text-[12px] text-muted truncate">
+                            ภาพยนตร์: <span className="text-gold/80">{loc.movieTitle}</span> · {loc.province}
+                          </div>
+                        </div>
+                        <div className="shrink-0 w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-muted group-hover:text-gold transition-colors group-hover:bg-gold/20">
+                          <MapPin size={16} />
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-10 text-center text-muted text-[13px]">
+                      <Search size={28} className="mx-auto mb-3 opacity-10" />
+                      ไม่พบสถานที่หรือภาพยนตร์ที่ตรงกับคำค้น
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
 
           <MapPicker 
             lat={formData.lat} 
