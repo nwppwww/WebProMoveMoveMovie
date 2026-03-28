@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Trash2, Edit2, Plus, Users, Film, MapPin, LayoutDashboard, Megaphone, LogIn, Shield } from 'lucide-react';
+import { Eye, EyeOff, Trash2, Edit2, Plus, Users, Film, MapPin, LayoutDashboard, Megaphone, LogIn, Shield, Ticket, Check } from 'lucide-react';
 import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
-import { UserDB, MovieController, LocationController, AdController, supabase } from '../services/db';
+import { UserDB, MovieController, LocationController, AdController, TicketController, supabase } from '../services/db';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 const AdminPage = () => {
@@ -124,6 +124,7 @@ const AdminPage = () => {
   const locations = LocationController.list();
   const ads = AdController.list();
   const users = UserDB.list();
+  const tickets = TicketController.list();
 
   return (
     <div className="max-w-[1200px] mx-auto pt-[100px] pb-16 px-6">
@@ -136,8 +137,9 @@ const AdminPage = () => {
           {[
             { id: 'movies', l: 'ภาพยนตร์', icon: Film },
             { id: 'locations', l: 'สถานที่', icon: MapPin },
-            { id: 'ads', l: 'โฆษณา/โปรโมชั่น', icon: Megaphone },
-            { id: 'users', l: 'ผู้ใช้งาน', icon: Users }
+            { id: 'ads', l: 'ตั๋วสิทธิพิเศษ (Partner)', icon: Ticket },
+            { id: 'users', l: 'ผู้ใช้งาน', icon: Users },
+            { id: 'tickets', l: 'ประวัติการแลกตั๋ว', icon: Check }
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} 
               className={`tab-item flex items-center gap-2 whitespace-nowrap min-w-max ${tab === t.id ? 'active' : ''}`}>
@@ -211,10 +213,10 @@ const AdminPage = () => {
         {/* ADS TAB */}
         {tab === 'ads' && (
           <div>
-            <h3 className="font-serif mb-4 text-[20px]">อนุมัติแคมเปญ &amp; โฆษณาจาก Partner</h3>
+            <h3 className="font-serif mb-4 text-[20px]">อนุมัติตั๋วสิทธิพิเศษจาก Partner</h3>
             <div className="overflow-x-auto">
               <table>
-                <thead><tr><th>ID</th><th>หัวข้อ</th><th>ชื่อ Partner</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+                <thead><tr><th>ID</th><th>หัวข้อ</th><th>ชื่อ Partner</th><th>แต้มที่ใช้แลก</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
                 <tbody>
                   {ads.map(a => {
                     const partner = users.find(u => u.id === a.partnerId);
@@ -223,6 +225,7 @@ const AdminPage = () => {
                         <td>{a.id}</td>
                         <td>{a.title}</td>
                         <td>{partner ? partner.name : 'Unknown Partner'}</td>
+                        <td className="text-gold font-medium">{a.pointsRequired > 0 ? `${a.pointsRequired} แต้ม` : '-'}</td>
                         <td>
                           {a.hidden ? 
                             <span className="text-muted bg-white/5 px-2 py-0.5 rounded-full text-xs">รออนุมัติ / ซ่อน</span> : 
@@ -234,10 +237,47 @@ const AdminPage = () => {
                             {a.hidden ? <Eye size={14} /> : <EyeOff size={14} />} 
                             {a.hidden ? 'อนุมัติ (แสดงผล)' : 'ระงับ (ซ่อน)'}
                           </button>
-                          <button onClick={() => handleDelete(a.id, AdController, 'โฆษณา')} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+                          <button onClick={() => handleDelete(a.id, AdController, 'ตั๋วสิทธิพิเศษ')} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
                         </td>
                       </tr>
                   )})}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TICKETS TAB */}
+        {tab === 'tickets' && (
+          <div>
+            <h3 className="font-serif mb-4 text-[20px]">ประวัติตั๋วและสิทธิ์พิเศษที่ถูกผู้ใช้แลกไป</h3>
+            <div className="overflow-x-auto">
+              <table>
+                <thead><tr><th>ID</th><th>รหัสตั๋ว</th><th>ชื่อตั๋ว (สิทธิพิเศษ)</th><th>ผู้ใช้</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+                <tbody>
+                  {tickets.map(t => {
+                    const ad = ads.find(a => a.id === t.adId || a.id === t.adid);
+                    const usr = users.find(u => u.id === t.userId || u.id === t.userid);
+                    return (
+                      <tr key={t.id}>
+                        <td>{t.id}</td>
+                        <td className="font-mono text-gold font-bold tracking-wider">{t.ticketCode}</td>
+                        <td>{ad?.title || 'Unknown Ad'}</td>
+                        <td>{usr ? `${usr.name}` : 'Unknown'}</td>
+                        <td className={t.used ? 'text-red-400 font-medium' : 'text-green-400 font-medium'}>{t.used ? 'ใช้สิทธิ์แล้ว' : 'พร้อมใช้งาน'}</td>
+                        <td>
+                          <button onClick={async () => {
+                            await TicketController.markUsed(t.id, !t.used);
+                            refresh();
+                            toast(`เปลี่ยนสถานะตั๋ว ${t.ticketCode} สำเร็จ`);
+                          }} className="btn-ghost py-1.5 px-3 rounded-md mr-2 text-[13px] border border-white/20">
+                            {t.used ? 'รีเซ็ตเป็น "พร้อมใช้"' : 'ใช้งานตั๋วนี้'}
+                          </button>
+                          <button onClick={() => handleDelete(t.id, TicketController, 'ตั๋ว')} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

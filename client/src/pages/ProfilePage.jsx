@@ -1,8 +1,8 @@
 import React from 'react';
-import { User, Gift, Clock, Star, Edit2, Check, X, Heart, MapPin, CheckCircle } from 'lucide-react';
+import { User, Gift, Clock, Star, Edit2, Check, X, Heart, MapPin, CheckCircle, Ticket } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { PointController, UserDB, FavoriteController, CheckInController } from '../services/db';
+import { PointController, UserDB, FavoriteController, CheckInController, TicketController, AdController } from '../services/db';
 
 const ProfilePage = () => {
   const { user, toast, updateUser } = useAppContext();
@@ -17,6 +17,11 @@ const ProfilePage = () => {
   const [checkinLocations] = React.useState(() =>
     user ? CheckInController.getUserCheckInLocations(user.id) : []
   );
+  const [tickets] = React.useState(() =>
+    user ? TicketController.getUserTickets(user.id) : []
+  );
+  const ads = AdController.list();
+  
   const pts = PointController.get(user?.id);
 
   const fetchHistory = React.useCallback(async () => {
@@ -167,6 +172,42 @@ const ProfilePage = () => {
             </div>
           </div>
         </div>
+
+        {/* Privilege Tickets */}
+        {tickets.length > 0 && (
+          <div className="mt-12">
+            <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
+              <Ticket size={24} className="text-gold" /> ตั๋วสิทธิพิเศษของฉัน
+            </h2>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5">
+              {tickets.map(t => {
+                const ad = ads.find(a => a.id === t.adId || a.id === t.adid);
+                return (
+                  <div key={t.id} className="relative rounded-2xl overflow-hidden border border-gold/20 bg-gradient-to-br from-[#1a1b26] to-[#0d0d1a] shadow-[0_10px_30px_rgba(232,160,32,0.1)]">
+                    <div className="absolute top-0 right-0 w-16 h-16 opacity-5 pointer-events-none">
+                      <Ticket size={80} className="text-gold rotate-12 translate-x-4 -translate-y-4" />
+                    </div>
+                    <div className="p-5 border-b border-dashed border-white/10 relative z-10">
+                      <span className="badge badge-gold mb-3 inline-block">Partner Ticket</span>
+                      <h3 className="font-serif text-[18px] text-main mb-2 leading-tight">{ad?.title || 'ตั๋วสิทธิพิเศษ'}</h3>
+                      <p className="text-[13px] text-muted line-clamp-2">{ad?.description || 'แสดงตั๋วใบนี้กับร้านค้าที่ร่วมรายการเพื่อรับสิทธิ์'}</p>
+                    </div>
+                    <div className="p-5 bg-gold/5 flex flex-col items-center relative z-10">
+                      <div className="text-[11px] text-muted mb-1 uppercase tracking-widest font-medium">รหัสการใช้สิทธิ์ของคุณ</div>
+                      <div className="font-mono text-[22px] tracking-widest font-bold text-main py-1 px-4 bg-black/40 rounded-lg border border-gold/10 inline-block">{t.ticketCode}</div>
+                      <div className="text-[11px] text-white/30 mt-3 flex items-center justify-between w-full">
+                         <span>ได้เมื่อ: {new Date(t.redeemedAt || t.createdAt).toLocaleDateString('th-TH')}</span>
+                         <span className={`${t.used ? 'text-red-400' : 'text-green-400'}`}>
+                           {t.used ? 'ใช้สิทธิ์แล้ว' : 'พร้อมใช้งาน'}
+                         </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Favorite Locations */}
         <div className="mt-12">

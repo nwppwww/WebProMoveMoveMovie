@@ -16,7 +16,8 @@ let memoryDB = {
   ads: [],
   points: {},
   favorites: [],
-  checkins: []
+  checkins: [],
+  tickets: []
 };
 
 // Normalize keys (PostgreSQL lowercases column names)
@@ -32,6 +33,10 @@ const normalize = (list) => (list || []).map(item => {
     if (k === 'partnerid') key = 'partnerId';
     if (k === 'releaseyear') key = 'releaseYear';
     if (k === 'imgurl') key = 'imgUrl';
+    if (k === 'ticket_code') key = 'ticketCode';
+    if (k === 'redeemed_at') key = 'redeemedAt';
+    if (k === 'pointsrequired') key = 'pointsRequired';
+    if (k === 'adid') key = 'adId';
     obj[key] = item[k];
   });
   return obj;
@@ -39,7 +44,7 @@ const normalize = (list) => (list || []).map(item => {
 
 export const initDB = async () => {
   try {
-    const [uRes, mRes, lRes, sRes, rvRes, rwRes, aRes, pRes, fRes, cRes] = await Promise.all([
+    const [uRes, mRes, lRes, sRes, rvRes, rwRes, aRes, pRes, fRes, cRes, tRes] = await Promise.all([
       supabase.from('users').select('*'),
       supabase.from('movies').select('*'),
       supabase.from('locations').select('*'),
@@ -49,7 +54,8 @@ export const initDB = async () => {
       supabase.from('ads').select('*'),
       supabase.from('points').select('*'),
       supabase.from('favorites').select('*'),
-      supabase.from('checkins').select('*')
+      supabase.from('checkins').select('*'),
+      supabase.from('tickets').select('*')
     ]);
 
     if (mRes.error) console.error('Supabase Error (movies): ' + mRes.error.message);
@@ -65,6 +71,7 @@ export const initDB = async () => {
     memoryDB.ads = normalize(aRes.data);
     memoryDB.favorites = !fRes.error ? (fRes.data || []) : [];
     memoryDB.checkins  = !cRes.error ? (cRes.data || []) : [];
+    memoryDB.tickets   = !tRes.error ? normalize(tRes.data || []) : [];
 
     // Bind movieId to locations for AdminPage display
     memoryDB.locations.forEach(loc => {
@@ -102,6 +109,10 @@ const denormalize = (data) => {
     if (k === 'partnerId') key = 'partnerid';
     if (k === 'releaseYear') key = 'releaseyear';
     if (k === 'imgUrl') key = 'imgurl';
+    if (k === 'pointsRequired') key = 'pointsrequired';
+    if (k === 'ticketCode') key = 'ticket_code';
+    if (k === 'redeemedAt') key = 'redeemed_at';
+    if (k === 'adId') key = 'adid';
     obj[key] = data[k];
   });
   return obj;
@@ -559,5 +570,50 @@ export const CheckInController = {
     memoryDB.points[userId] = newTotal;
 
     return { checkIn: data, newPoints: newTotal };
+  }
+};
+
+export const TicketController = {
+  list() { return memoryDB.tickets; },
+
+  getUserTickets(userId) {
+    if (!userId) return [];
+    return memoryDB.tickets.filter(t =>
+      (t.userId || t.userid) === parseInt(userId)
+    );
+  },
+
+  // Generate human-readable, non-ambiguous ticket code
+  generateCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const seg = (n = 4) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    return `MMM-${seg()}-${seg()}-${seg()}`;
+  },
+
+  // Redeem a campaign ticket — points already deducted by caller
+  async redeem(userId, adId) {
+    const code = this.generateCode();
+    const { data, error } = await supabase
+      .from('tickets')
+      .insert({ userid: parseInt(userId), adid: parseInt(adId), ticket_code: code })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    const normalized = normalize([data])[0];
+    memoryDB.tickets.push(normalized);
+    return normalized;
+  },
+
+  // Admin / partner marks ticket as used
+  async markUsed(ticketId, usedState = true) {
+    const t = memoryDB.tickets.find(x => x.id === parseInt(ticketId));
+    if (!t) return;
+    const { error } = await supabase.from('tickets').update({ used: usedState }).eq('id', ticketId);
+    if (!error) t.used = usedState;
+  },
+
+  async delete(id) {
+    await supabase.from('tickets').delete().eq('id', id);
+    memoryDB.tickets = memoryDB.tickets.filter(t => t.id !== parseInt(id));
   }
 };
