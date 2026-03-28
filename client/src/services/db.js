@@ -15,7 +15,8 @@ let memoryDB = {
   rewards: [],
   ads: [],
   points: {},
-  favorites: []
+  favorites: [],
+  checkins: []
 };
 
 // Normalize keys (PostgreSQL lowercases column names)
@@ -38,7 +39,7 @@ const normalize = (list) => (list || []).map(item => {
 
 export const initDB = async () => {
   try {
-    const [uRes, mRes, lRes, sRes, rvRes, rwRes, aRes, pRes, fRes] = await Promise.all([
+    const [uRes, mRes, lRes, sRes, rvRes, rwRes, aRes, pRes, fRes, cRes] = await Promise.all([
       supabase.from('users').select('*'),
       supabase.from('movies').select('*'),
       supabase.from('locations').select('*'),
@@ -47,7 +48,8 @@ export const initDB = async () => {
       supabase.from('rewards').select('*'),
       supabase.from('ads').select('*'),
       supabase.from('points').select('*'),
-      supabase.from('favorites').select('*')
+      supabase.from('favorites').select('*'),
+      supabase.from('checkins').select('*')
     ]);
 
     if (mRes.error) console.error('Supabase Error (movies): ' + mRes.error.message);
@@ -62,6 +64,7 @@ export const initDB = async () => {
     memoryDB.rewards = normalize(rwRes.data);
     memoryDB.ads = normalize(aRes.data);
     memoryDB.favorites = !fRes.error ? (fRes.data || []) : [];
+    memoryDB.checkins  = !cRes.error ? (cRes.data || []) : [];
 
     // Bind movieId to locations for AdminPage display
     memoryDB.locations.forEach(loc => {
@@ -489,5 +492,72 @@ export const FavoriteController = {
       memoryDB.favorites.push(data);
       return true; // now favorited
     }
+  }
+};
+
+export const CheckInController = {
+  // Check cache if user has already checked into a location
+  hasCheckedIn(userId, locationId) {
+    if (!userId) return false;
+    return memoryDB.checkins.some(
+      c => (c.userid || c.userId) === userId && (c.locationid || c.locationId) === parseInt(locationId)
+    );
+  },
+
+  // Query DB directly (used on page load to get latest truth)
+  async hasCheckedInDB(userId, locationId) {
+    const { data, error } = await supabase
+      .from('checkins')
+      .select('id')
+      .eq('userid', userId)
+      .eq('locationid', parseInt(locationId))
+      .maybeSingle();
+    if (error) return false;
+    return !!data;
+  },
+
+  // Get all checked-in location IDs for a user
+  getUserCheckIns(userId) {
+    if (!userId) return [];
+    return memoryDB.checkins
+      .filter(c => (c.userid || c.userId) === userId)
+      .map(c => c.locationid || c.locationId);
+  },
+
+  // Get full location objects for checked-in locations
+  getUserCheckInLocations(userId) {
+    const ids = this.getUserCheckIns(userId);
+    return memoryDB.locations.filter(l => ids.includes(l.id));
+  },
+
+  // Record a check-in and award points (enforced at DB level via UNIQUE constraint)
+  async checkIn(userId, locationId, pointsToAdd = 500) {
+    const locId = parseInt(locationId);
+
+    // Insert to checkins (will fail if already exists due to UNIQUE constraint)
+    const { data, error } = await supabase
+      .from('checkins')
+      .insert({ userid: userId, locationid: locId })
+      .select()
+      .single();
+
+    if (error) {
+      // Unique violation = already checked in
+      if (error.code === '23505' || error.message.includes('duplicate') || error.message.includes('unique')) {
+        throw new Error('ALREADY_CHECKED_IN');
+      }
+      throw new Error(error.message);
+    }
+
+    // Update cache
+    memoryDB.checkins.push(data);
+
+    // Award points
+    const current = memoryDB.points[userId] || 0;
+    const newTotal = current + pointsToAdd;
+    await supabase.from('points').upsert({ userid: userId, amount: newTotal });
+    memoryDB.points[userId] = newTotal;
+
+    return { checkIn: data, newPoints: newTotal };
   }
 };

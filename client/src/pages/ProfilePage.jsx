@@ -1,8 +1,8 @@
 import React from 'react';
-import { User, Gift, Clock, Star, Edit2, Check, X, Heart, MapPin } from 'lucide-react';
+import { User, Gift, Clock, Star, Edit2, Check, X, Heart, MapPin, CheckCircle } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { PointController, UserDB, FavoriteController } from '../services/db';
+import { PointController, UserDB, FavoriteController, CheckInController } from '../services/db';
 
 const ProfilePage = () => {
   const { user, toast, updateUser } = useAppContext();
@@ -13,6 +13,9 @@ const ProfilePage = () => {
   const [loading, setLoading] = React.useState(false);
   const [favLocations, setFavLocations] = React.useState(() =>
     user ? FavoriteController.getUserFavoriteLocations(user.id) : []
+  );
+  const [checkinLocations] = React.useState(() =>
+    user ? CheckInController.getUserCheckInLocations(user.id) : []
   );
   const pts = PointController.get(user?.id);
 
@@ -228,6 +231,47 @@ const ProfilePage = () => {
                 className="btn-ghost px-5 py-2 rounded-xl text-[13px] inline-flex items-center gap-2"
               >
                 <MapPin size={14} /> ไปดูสถานที่
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Checked-in Locations */}
+        <div className="mt-12">
+          <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
+            <CheckCircle size={24} className="text-green-400" /> สถานที่ที่เช็คอินแล้ว
+          </h2>
+          {checkinLocations.length > 0 ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
+              {checkinLocations.map(l => (
+                <div
+                  key={l.id}
+                  className="bg-card border border-white/5 rounded-2xl p-5 flex items-center gap-4 cursor-pointer hover:border-green-500/20 transition-all"
+                  onClick={() => navigate(`/location/${l.id}`)}
+                >
+                  <div className="w-11 h-11 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
+                    <CheckCircle size={22} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-[15px] truncate mb-0.5">{l.name}</div>
+                    <div className="text-muted text-[12px]">{l.province}</div>
+                  </div>
+                  <div className="text-[11px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg px-2.5 py-1 shrink-0">
+                    +500 แต้ม
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-card border border-dashed border-white/10 rounded-2xl p-10 text-center">
+              <CheckCircle size={40} className="text-white/10 mx-auto mb-3" />
+              <div className="text-[15px] text-muted mb-1">ยังไม่มีสถานที่ที่เช็คอิน</div>
+              <div className="text-[13px] text-white/20 mb-5">เดินทางไปยังสถานที่จริงแล้วกด &quot;เช็คอินสถานที่นี้&quot; เพื่อรับ 500 แต้ม</div>
+              <button
+                onClick={() => navigate('/map')}
+                className="btn-ghost px-5 py-2 rounded-xl text-[13px] inline-flex items-center gap-2"
+              >
+                <MapPin size={14} /> ดูแผนที่สถานที่
               </button>
             </div>
           )}

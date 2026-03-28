@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Tag, MessagesSquare, Map, Star, Compass, CheckCircle, Heart } from 'lucide-react';
 import { Shimmer, LeafletMap, Stars, Field } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
-import { LocationController, AdController, ReviewController, MovieController, PointController, FavoriteController } from '../services/db';
+import { LocationController, AdController, ReviewController, MovieController, FavoriteController, CheckInController } from '../services/db';
 
 const LocationPage = () => {
   const { id } = useParams();
@@ -30,27 +30,41 @@ const LocationPage = () => {
 
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      const parsedId = parseInt(id);
-      const data = LocationController.get(parsedId);
-      if (data) {
-        setLoc(data);
-        document.title = `Move³Movie | ${data.name || 'สถานที่'}`;
-        setAds(AdController.list().filter(a => !a.hidden));
-        setReviews(ReviewController.list(parsedId));
+    const parsedId = parseInt(id);
 
-        // Find movies featuring this location
-        const dbMovies = MovieController.list();
-        const relatedMovies = dbMovies.filter(m => MovieController.scenes(m.id).some(s => s.locationId === parsedId));
-        setMovies(relatedMovies);
+    const localData = LocationController.get(parsedId);
+    if (localData) {
+      setLoc(localData);
+      document.title = `Move\u00b3Movie | ${localData.name || '\u0e2a\u0e16\u0e32\u0e19\u0e17\u0e35\u0e48'}`;
+      setAds(AdController.list().filter(a => !a.hidden));
+      setReviews(ReviewController.list(parsedId));
+      const relatedMovies = MovieController.list().filter(m =>
+        MovieController.scenes(m.id).some(s => s.locationId === parsedId)
+      );
+      setMovies(relatedMovies);
+      if (user) setIsFav(FavoriteController.isFavorite(user.id, parsedId));
+    }
 
-        // Check favorite state
-        if (user) setIsFav(FavoriteController.isFavorite(user.id, parsedId));
+    // Check real check-in status from DB (prevents bypass via page refresh)
+    const checkStatus = async () => {
+      if (user) {
+        // First check cache for speed
+        const cachedCheckedIn = CheckInController.hasCheckedIn(user.id, parsedId);
+        if (cachedCheckedIn) {
+          setHasCheckedIn(true);
+        } else {
+          // Verify from DB to catch cases where cache is stale
+          const dbCheckedIn = await CheckInController.hasCheckedInDB(user.id, parsedId);
+          setHasCheckedIn(dbCheckedIn);
+        }
       }
       setLoading(false);
-    }, 400);
+    };
 
-    return () => { document.title = 'Move³Movie'; };
+    // Small delay to let UI render first
+    setTimeout(() => { checkStatus(); }, 300);
+
+    return () => { document.title = 'Move\u00b3Movie'; };
   }, [id, user]);
 
   const handleToggleFavorite = useCallback(async () => {
@@ -83,11 +97,11 @@ const LocationPage = () => {
   };
 
   const handleCheckIn = () => {
-    if (!user) return toast('กรุณาเข้าสู่ระบบเพื่อเช็คอิน', 'error');
-    if (hasCheckedIn) return toast('คุณได้เช็คอินสถานที่นี้ไปแล้ว', 'error');
+    if (!user) return toast('\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e0a\u0e47\u0e04\u0e2d\u0e34\u0e19', 'error');
+    if (hasCheckedIn) return toast('\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49\u0e40\u0e0a\u0e47\u0e04\u0e2d\u0e34\u0e19\u0e2a\u0e16\u0e32\u0e19\u0e17\u0e35\u0e48\u0e19\u0e35\u0e49\u0e44\u0e1b\u0e41\u0e25\u0e49\u0e27 (1 \u0e2a\u0e16\u0e32\u0e19\u0e17\u0e35\u0e48 / 1 \u0e1a\u0e31\u0e0d\u0e0a\u0e35)', 'error');
 
     if (!navigator.geolocation) {
-      return toast('เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง', 'error');
+      return toast('\u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e44\u0e21\u0e48\u0e23\u0e2d\u0e07\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e23\u0e30\u0e1a\u0e38\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07', 'error');
     }
 
     setIsCheckingIn(true);
@@ -95,36 +109,41 @@ const LocationPage = () => {
       async (position) => {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
-        
-        // Calculate distance via Haversine formula
-        const R = 6371; // Earth's radius in km
+
+        // Haversine formula
+        const R = 6371;
         const dLat = (loc.lat - userLat) * (Math.PI / 180);
         const dLng = (loc.lng - userLng) * (Math.PI / 180);
-        const a = 
+        const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(userLat * (Math.PI / 180)) * Math.cos(loc.lat * (Math.PI / 180)) * 
+          Math.cos(userLat * (Math.PI / 180)) * Math.cos(loc.lat * (Math.PI / 180)) *
           Math.sin(dLng / 2) * Math.sin(dLng / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c; // Distance in km
+        const distance = R * c;
 
         if (distance <= 5) {
           try {
-            await PointController.add(user.id, 500);
-            toast('เช็คอินสำเร็จ! คุณได้รับ 500 แต้ม', 'success');
+            const result = await CheckInController.checkIn(user.id, parseInt(id), 500);
+            toast(`\u0e40\u0e0a\u0e47\u0e04\u0e2d\u0e34\u0e19\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08! \u0e04\u0e38\u0e13\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a 500 \u0e41\u0e15\u0e49\u0e21 \ud83c\udfc6 (\u0e23\u0e27\u0e21 ${result.newPoints} \u0e41\u0e15\u0e49\u0e21)`, 'success');
             setHasCheckedIn(true);
           } catch (err) {
-            toast('เกิดข้อผิดพลาดในการเพิ่มแต้ม: ' + err.message, 'error');
+            if (err.message === 'ALREADY_CHECKED_IN') {
+              toast('\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49\u0e40\u0e0a\u0e47\u0e04\u0e2d\u0e34\u0e19\u0e2a\u0e16\u0e32\u0e19\u0e17\u0e35\u0e48\u0e19\u0e35\u0e49\u0e44\u0e1b\u0e41\u0e25\u0e49\u0e27 (1 \u0e2a\u0e16\u0e32\u0e19\u0e17\u0e35\u0e48 / 1 \u0e1a\u0e31\u0e0d\u0e0a\u0e35)', 'error');
+              setHasCheckedIn(true);
+            } else {
+              toast('\u0e40\u0e01\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e1c\u0e34\u0e14\u0e1e\u0e25\u0e32\u0e14: ' + err.message, 'error');
+            }
           }
         } else {
-          toast(`คุณอยู่ห่างจากสถานที่เกินไป (${distance.toFixed(1)} กม. / กำหนด 5 กม.)`, 'error');
+          toast(`\u0e04\u0e38\u0e13\u0e2d\u0e22\u0e39\u0e48\u0e2b\u0e48\u0e32\u0e07\u0e08\u0e32\u0e01\u0e2a\u0e16\u0e32\u0e19\u0e17\u0e35\u0e48\u0e40\u0e01\u0e34\u0e19\u0e44\u0e1b (${distance.toFixed(1)} \u0e01\u0e21. / \u0e01\u0e33\u0e2b\u0e19\u0e14 5 \u0e01\u0e21.)`, 'error');
         }
         setIsCheckingIn(false);
       },
       (error) => {
-        let errorMsg = 'เกิดข้อผิดพลาดในการดึงตำแหน่ง';
-        if (error.code === 1) errorMsg = 'คุณไม่อนุญาตให้เข้าถึงตำแหน่งที่ตั้ง';
-        else if (error.code === 2) errorMsg = 'ไม่สามารถระบุตำแหน่งของคุณได้';
-        else if (error.code === 3) errorMsg = 'หมดเวลาในการดึงตำแหน่ง';
+        let errorMsg = '\u0e40\u0e01\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e1c\u0e34\u0e14\u0e1e\u0e25\u0e32\u0e14\u0e43\u0e19\u0e01\u0e32\u0e23\u0e14\u0e36\u0e07\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07';
+        if (error.code === 1) errorMsg = '\u0e04\u0e38\u0e13\u0e44\u0e21\u0e48\u0e2d\u0e19\u0e38\u0e0d\u0e32\u0e15\u0e43\u0e2b\u0e49\u0e40\u0e02\u0e49\u0e32\u0e16\u0e36\u0e07\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07\u0e17\u0e35\u0e48\u0e15\u0e31\u0e49\u0e07';
+        else if (error.code === 2) errorMsg = '\u0e44\u0e21\u0e48\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16\u0e23\u0e30\u0e1a\u0e38\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49';
+        else if (error.code === 3) errorMsg = '\u0e2b\u0e21\u0e14\u0e40\u0e27\u0e25\u0e32\u0e43\u0e19\u0e01\u0e32\u0e23\u0e14\u0e36\u0e07\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07';
         toast(errorMsg, 'error');
         setIsCheckingIn(false);
       },
