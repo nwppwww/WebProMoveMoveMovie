@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Heart, ChevronRight, PlayCircle } from 'lucide-react';
 import { Particles } from '../components/UI';
-import { MovieController, LocationController } from '../services/db';
+import { MovieController, LocationController, FavoriteController } from '../services/db';
+import { useAppContext } from '../context/AppContext';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { user, toast } = useAppContext();
   const [q, setQ] = useState('');
+  const [favoritedIds, setFavoritedIds] = useState(() => {
+    if (!user) return new Set();
+    return new Set(FavoriteController.getUserFavorites(user.id));
+  });
+  const [togglingId, setTogglingId] = useState(null);
+
   const allMovies = MovieController.list();
   const popMovies = allMovies.slice(0, 12);
   const popLocations = LocationController.list().filter(l => !l.hidden).slice(0, 6);
@@ -15,6 +23,33 @@ const HomePage = () => {
     e.preventDefault();
     navigate(`/movies?q=${encodeURIComponent(q)}`);
   };
+
+  const handleToggleFavorite = useCallback(async (e, locationId) => {
+    e.stopPropagation(); // don't navigate to location page
+    if (!user) {
+      toast('กรุณาเข้าสู่ระบบก่อนเพิ่มสถานที่โปรด', 'error');
+      return;
+    }
+    setTogglingId(locationId);
+    try {
+      const isNowFav = await FavoriteController.toggle(user.id, locationId);
+      setFavoritedIds(prev => {
+        const next = new Set(prev);
+        if (isNowFav) {
+          next.add(locationId);
+          toast('เพิ่มในสถานที่โปรดแล้ว ❤️');
+        } else {
+          next.delete(locationId);
+          toast('นำออกจากสถานที่โปรดแล้ว');
+        }
+        return next;
+      });
+    } catch (err) {
+      toast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+    } finally {
+      setTogglingId(null);
+    }
+  }, [user, toast]);
 
   return (
     <div>
@@ -85,23 +120,56 @@ const HomePage = () => {
           <div className="mt-20">
             <h2 className="font-serif text-[26px] m-0 mb-7">สถานที่<span className="gold-text">ยอดนิยม</span></h2>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5 max-md:grid-cols-1">
-              {popLocations.map(l => (
-                <div key={l.id} className="card-hover rounded-2xl" onClick={() => navigate(`/location/${l.id}`)}>
-                  <div className="p-6">
-                    <div className="flex justify-between mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center text-gold">
-                        <MapPin size={24} />
+              {popLocations.map(l => {
+                const isFav = favoritedIds.has(l.id);
+                const isToggling = togglingId === l.id;
+                return (
+                  <div key={l.id} className="card-hover rounded-2xl" onClick={() => navigate(`/location/${l.id}`)}
+                    style={{ position: 'relative' }}>
+                    <div className="p-6">
+                      <div className="flex justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center text-gold">
+                          <MapPin size={24} />
+                        </div>
+                        <button
+                          onClick={(e) => handleToggleFavorite(e, l.id)}
+                          disabled={isToggling}
+                          title={isFav ? 'นำออกจากสถานที่โปรด' : 'เพิ่มในสถานที่โปรด'}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '6px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'transform 0.15s ease',
+                            transform: isToggling ? 'scale(0.85)' : 'scale(1)',
+                            opacity: isToggling ? 0.5 : 1,
+                          }}
+                        >
+                          <Heart
+                            size={22}
+                            style={{
+                              fill: isFav ? '#e8401f' : 'none',
+                              stroke: isFav ? '#e8401f' : 'currentColor',
+                              color: isFav ? '#e8401f' : '#888',
+                              transition: 'all 0.2s ease',
+                              filter: isFav ? 'drop-shadow(0 0 4px rgba(232,64,31,0.5))' : 'none',
+                            }}
+                          />
+                        </button>
                       </div>
-                      <div className="text-muted"><Heart size={20} /></div>
+                      <div className="font-semibold text-[16px] mb-1.5">{l.name}</div>
+                      <div className="text-muted text-[13px] mb-3">{l.province}</div>
+                      <p className="text-[#A8A5B4] text-[13px] leading-[1.6] m-0">
+                        {l.description ? (l.description.length > 80 ? l.description.substring(0, 80) + '...' : l.description) : 'ไม่มีรายละเอียด'}
+                      </p>
                     </div>
-                    <div className="font-semibold text-[16px] mb-1.5">{l.name}</div>
-                    <div className="text-muted text-[13px] mb-3">{l.province}</div>
-                    <p className="text-[#A8A5B4] text-[13px] leading-[1.6] m-0">
-                      {l.description ? (l.description.length > 80 ? l.description.substring(0, 80) + '...' : l.description) : 'ไม่มีรายละเอียด'}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

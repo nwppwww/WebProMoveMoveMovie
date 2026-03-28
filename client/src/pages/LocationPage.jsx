@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Tag, MessagesSquare, Map, Star, Compass, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Tag, MessagesSquare, Map, Star, Compass, CheckCircle, Heart } from 'lucide-react';
 import { Shimmer, LeafletMap, Stars, Field } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
-import { LocationController, AdController, ReviewController, MovieController, PointController } from '../services/db';
+import { LocationController, AdController, ReviewController, MovieController, PointController, FavoriteController } from '../services/db';
 
 const LocationPage = () => {
   const { id } = useParams();
@@ -15,7 +15,11 @@ const LocationPage = () => {
   const [reviews, setReviews] = useState([]);
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
+  // Favorite state
+  const [isFav, setIsFav] = useState(false);
+  const [favToggling, setFavToggling] = useState(false);
+
   // Check-in states
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
@@ -32,19 +36,36 @@ const LocationPage = () => {
       if (data) {
         setLoc(data);
         document.title = `Move³Movie | ${data.name || 'สถานที่'}`;
-        setAds(AdController.list().filter(a => !a.hidden)); // In a real app, distance based
+        setAds(AdController.list().filter(a => !a.hidden));
         setReviews(ReviewController.list(parsedId));
 
         // Find movies featuring this location
         const dbMovies = MovieController.list();
         const relatedMovies = dbMovies.filter(m => MovieController.scenes(m.id).some(s => s.locationId === parsedId));
         setMovies(relatedMovies);
+
+        // Check favorite state
+        if (user) setIsFav(FavoriteController.isFavorite(user.id, parsedId));
       }
       setLoading(false);
     }, 400);
 
     return () => { document.title = 'Move³Movie'; };
-  }, [id]);
+  }, [id, user]);
+
+  const handleToggleFavorite = useCallback(async () => {
+    if (!user) return toast('กรุณาเข้าสู่ระบบก่อนเพิ่มสถานที่โปรด', 'error');
+    setFavToggling(true);
+    try {
+      const isNowFav = await FavoriteController.toggle(user.id, parseInt(id));
+      setIsFav(isNowFav);
+      toast(isNowFav ? 'เพิ่มในสถานที่โปรดแล้ว ❤️' : 'นำออกจากสถานที่โปรดแล้ว');
+    } catch (err) {
+      toast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+    } finally {
+      setFavToggling(false);
+    }
+  }, [user, id, toast]);
 
   const submitReview = async (e) => {
     e.preventDefault();
@@ -151,7 +172,44 @@ const LocationPage = () => {
               <span className="badge bg-gold/10 border-gold/20 text-gold"><Star size={12} className="inline mr-1" /> {avgRating}</span>
             </div>
 
-            <h1 className="font-serif text-[clamp(32px,4vw,42px)] m-0 mb-4 leading-[1.2]">{loc.name}</h1>
+            <div className="flex items-start gap-4 mb-4">
+              <h1 className="font-serif text-[clamp(32px,4vw,42px)] m-0 leading-[1.2] flex-1">{loc.name}</h1>
+              <button
+                onClick={handleToggleFavorite}
+                disabled={favToggling}
+                title={isFav ? 'นำออกจากสถานที่โปรด' : 'เพิ่มในสถานที่โปรด'}
+                style={{
+                  marginTop: '6px',
+                  background: isFav ? 'rgba(232,64,31,0.1)' : 'rgba(255,255,255,0.05)',
+                  border: isFav ? '1px solid rgba(232,64,31,0.3)' : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  padding: '10px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  color: isFav ? '#e8401f' : '#888',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  transition: 'all 0.2s ease',
+                  transform: favToggling ? 'scale(0.92)' : 'scale(1)',
+                  opacity: favToggling ? 0.6 : 1,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                <Heart
+                  size={18}
+                  style={{
+                    fill: isFav ? '#e8401f' : 'none',
+                    stroke: isFav ? '#e8401f' : '#888',
+                    transition: 'all 0.2s ease',
+                    filter: isFav ? 'drop-shadow(0 0 4px rgba(232,64,31,0.5))' : 'none',
+                  }}
+                />
+                {isFav ? 'โปรดแล้ว' : 'เพิ่มในโปรด'}
+              </button>
+            </div>
             <p className="text-[#A8A5B4] leading-[1.85] text-[15px] mb-9 max-w-[680px]">
               {loc.description || 'ไม่มีคำอธิบาย'}
             </p>

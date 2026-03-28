@@ -1,15 +1,19 @@
 import React from 'react';
-import { User, Gift, Clock, Star, Edit2, Check, X } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { User, Gift, Clock, Star, Edit2, Check, X, Heart, MapPin } from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { PointController, UserDB } from '../services/db';
+import { PointController, UserDB, FavoriteController } from '../services/db';
 
 const ProfilePage = () => {
   const { user, toast, updateUser } = useAppContext();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = React.useState(false);
   const [newName, setNewName] = React.useState(user?.name || '');
   const [history, setHistory] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  const [favLocations, setFavLocations] = React.useState(() =>
+    user ? FavoriteController.getUserFavoriteLocations(user.id) : []
+  );
   const pts = PointController.get(user?.id);
 
   const fetchHistory = React.useCallback(async () => {
@@ -159,6 +163,74 @@ const ProfilePage = () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Favorite Locations */}
+        <div className="mt-12">
+          <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
+            <Heart size={24} style={{ fill: '#e8401f', stroke: '#e8401f' }} /> สถานที่โปรด
+          </h2>
+          {favLocations.length > 0 ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
+              {favLocations.map(l => (
+                <div key={l.id} className="bg-card border border-white/5 rounded-2xl p-5 flex flex-col gap-3"
+                  style={{ position: 'relative' }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div
+                      className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
+                      onClick={() => navigate(`/location/${l.id}`)}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold shrink-0">
+                        <MapPin size={20} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-[15px] truncate">{l.name}</div>
+                        <div className="text-muted text-[12px]">{l.province}</div>
+                      </div>
+                    </div>
+                    <button
+                      title="นำออกจากสถานที่โปรด"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          await FavoriteController.toggle(user.id, l.id);
+                          setFavLocations(FavoriteController.getUserFavoriteLocations(user.id));
+                          toast('นำออกจากสถานที่โปรดแล้ว');
+                        } catch (err) {
+                          toast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+                        }
+                      }}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        padding: '6px', borderRadius: '8px', flexShrink: 0,
+                        display: 'flex', alignItems: 'center',
+                        color: '#e8401f', transition: 'opacity 0.2s'
+                      }}
+                    >
+                      <Heart size={18} style={{ fill: '#e8401f', stroke: '#e8401f' }} />
+                    </button>
+                  </div>
+                  {l.description && (
+                    <p className="text-[#A8A5B4] text-[13px] leading-[1.6] m-0">
+                      {l.description.length > 90 ? l.description.substring(0, 90) + '...' : l.description}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-card border border-dashed border-white/10 rounded-2xl p-10 text-center">
+              <Heart size={40} className="text-white/10 mx-auto mb-3" />
+              <div className="text-[15px] text-muted mb-1">ยังไม่มีสถานที่โปรด</div>
+              <div className="text-[13px] text-white/20 mb-5">กดไอคอนหัวใจที่การ์ดสถานที่เพื่อเพิ่มในโปรด</div>
+              <button
+                onClick={() => navigate('/')}
+                className="btn-ghost px-5 py-2 rounded-xl text-[13px] inline-flex items-center gap-2"
+              >
+                <MapPin size={14} /> ไปดูสถานที่
+              </button>
+            </div>
+          )}
         </div>
         
       </div>

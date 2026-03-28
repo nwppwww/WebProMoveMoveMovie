@@ -14,7 +14,8 @@ let memoryDB = {
   reviews: [],
   rewards: [],
   ads: [],
-  points: {}
+  points: {},
+  favorites: []
 };
 
 // Normalize keys (PostgreSQL lowercases column names)
@@ -37,7 +38,7 @@ const normalize = (list) => (list || []).map(item => {
 
 export const initDB = async () => {
   try {
-    const [uRes, mRes, lRes, sRes, rvRes, rwRes, aRes, pRes] = await Promise.all([
+    const [uRes, mRes, lRes, sRes, rvRes, rwRes, aRes, pRes, fRes] = await Promise.all([
       supabase.from('users').select('*'),
       supabase.from('movies').select('*'),
       supabase.from('locations').select('*'),
@@ -45,7 +46,8 @@ export const initDB = async () => {
       supabase.from('reviews').select('*'),
       supabase.from('rewards').select('*'),
       supabase.from('ads').select('*'),
-      supabase.from('points').select('*')
+      supabase.from('points').select('*'),
+      supabase.from('favorites').select('*')
     ]);
 
     if (mRes.error) console.error('Supabase Error (movies): ' + mRes.error.message);
@@ -59,6 +61,7 @@ export const initDB = async () => {
     memoryDB.reviews = normalize(rvRes.data);
     memoryDB.rewards = normalize(rwRes.data);
     memoryDB.ads = normalize(aRes.data);
+    memoryDB.favorites = !fRes.error ? (fRes.data || []) : [];
 
     // Bind movieId to locations for AdminPage display
     memoryDB.locations.forEach(loc => {
@@ -432,5 +435,59 @@ export const UserDB = {
       newName: h.new_name || h.newname,
       changedAt: h.changed_at || h.changedat
     }));
+  }
+};
+
+export const FavoriteController = {
+  // Check if user has favorited a location
+  isFavorite(userId, locationId) {
+    if (!userId) return false;
+    return memoryDB.favorites.some(
+      f => (f.userid || f.userId) === userId && (f.locationid || f.locationId) === parseInt(locationId)
+    );
+  },
+
+  // Get all favorite location IDs for a user
+  getUserFavorites(userId) {
+    if (!userId) return [];
+    return memoryDB.favorites
+      .filter(f => (f.userid || f.userId) === userId)
+      .map(f => f.locationid || f.locationId);
+  },
+
+  // Get favorite location objects for a user
+  getUserFavoriteLocations(userId) {
+    const favIds = this.getUserFavorites(userId);
+    return memoryDB.locations.filter(l => favIds.includes(l.id) && !l.hidden);
+  },
+
+  // Toggle favorite (add or remove)
+  async toggle(userId, locationId) {
+    const locId = parseInt(locationId);
+    const already = this.isFavorite(userId, locId);
+
+    if (already) {
+      // Remove
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('userid', userId)
+        .eq('locationid', locId);
+      if (error) throw new Error(error.message);
+      memoryDB.favorites = memoryDB.favorites.filter(
+        f => !((f.userid || f.userId) === userId && (f.locationid || f.locationId) === locId)
+      );
+      return false; // not favorited anymore
+    } else {
+      // Add
+      const { data, error } = await supabase
+        .from('favorites')
+        .insert({ userid: userId, locationid: locId })
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      memoryDB.favorites.push(data);
+      return true; // now favorited
+    }
   }
 };
