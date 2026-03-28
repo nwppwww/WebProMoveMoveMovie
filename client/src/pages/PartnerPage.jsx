@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Megaphone, Plus, Edit2, Trash2, Eye, EyeOff, MapPin, Search, ChevronDown, Star, Ticket } from 'lucide-react';
+import { Megaphone, Plus, Edit2, Trash2, Eye, EyeOff, MapPin, Search, ChevronDown, Star, Ticket, Check } from 'lucide-react';
 import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
-import { AdController, LocationController, MovieController } from '../services/db';
+import { AdController, LocationController, MovieController, TicketController, UserDB } from '../services/db';
 
 const PartnerPage = () => {
   const { user, toast } = useAppContext();
@@ -22,7 +22,21 @@ const PartnerPage = () => {
 
   const refresh = () => setUpdater(x => x + 1);
 
+  const [tab, setTab] = useState('campaigns');
+  const [ticketSearch, setTicketSearch] = useState('');
+
   const myAds = AdController.list().filter(a => a.partnerId === user.id);
+  const myTickets = TicketController.list().filter(t => myAds.some(a => a.id === t.adId || a.id === t.adid));
+  const users = UserDB.list();
+
+  const filteredTickets = useMemo(() => {
+    let list = myTickets;
+    if (ticketSearch) {
+      list = list.filter(t => t.ticketCode?.toLowerCase().includes(ticketSearch.toLowerCase()));
+    }
+    return list.sort((a, b) => new Date(b.redeemedAt || b.redeemed_at) - new Date(a.redeemedAt || a.redeemed_at));
+  }, [myTickets, ticketSearch]);
+
   const allLocations = LocationController.list();
   const allMovies = MovieController.list();
 
@@ -75,6 +89,12 @@ const PartnerPage = () => {
     refresh();
   };
 
+  const handleToggleUsed = async (ticketId, currentState) => {
+    await TicketController.markUsed(ticketId, !currentState);
+    toast(!currentState ? 'ยืนยันการใช้สิทธิ์ตั๋วแล้ว' : 'ยกเลิกการใช้สิทธิ์แล้ว');
+    refresh();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -105,45 +125,123 @@ const PartnerPage = () => {
     <div className="max-w-[1000px] mx-auto pt-[100px] pb-16 px-6">
       <div className="animate-fade-up">
         
-        <div className="flex justify-between items-center mb-8 max-md:flex-col max-md:items-start max-md:gap-4">
+        <div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-start max-md:gap-4">
           <h1 className="font-serif text-[32px] m-0 flex items-center gap-3">
-            <Ticket size={32} className="text-gold" /> สร้างตั๋วสิทธิพิเศษ <span className="gold-text">(Partner)</span>
+            <Ticket size={32} className="text-gold" /> จัดการสิทธิพิเศษ <span className="gold-text">(Partner)</span>
           </h1>
-          <button onClick={handleCreate} className="btn-gold flex items-center gap-2 px-5 py-2.5 rounded-xl">
-            <Plus size={16} /> สร้างตั๋วใบใหม่
+          {tab === 'campaigns' && (
+            <button onClick={handleCreate} className="btn-gold flex items-center gap-2 px-5 py-2.5 rounded-xl">
+              <Plus size={16} /> สร้างตั๋วใบใหม่
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-2 border-b border-white/10 pb-4 mb-8 overflow-x-auto no-scrollbar">
+          <button onClick={() => setTab('campaigns')} className={`tab-item flex items-center gap-2 whitespace-nowrap min-w-max ${tab === 'campaigns' ? 'active' : ''}`}>
+            <Megaphone size={16} /> คลังตั๋วสิทธิพิเศษของฉัน
+          </button>
+          <button onClick={() => setTab('tickets')} className={`tab-item flex items-center gap-2 whitespace-nowrap min-w-max ${tab === 'tickets' ? 'active' : ''}`}>
+            <Check size={16} /> ประวัติรับสิทธิ์
           </button>
         </div>
 
-        {myAds.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5">
-            {myAds.map(a => (
-              <div key={a.id} className={`bg-card rounded-2xl p-6 border transition-colors ${a.hidden ? 'border-red-500/20' : 'border-green-400/20'}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <span className={`badge ${a.hidden ? 'badge-red' : 'badge-green'}`}>
-                    {a.hidden ? 'ระงับ/รออนุมัติ' : 'เผยแพร่แล้ว'}
-                  </span>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleToggleVis(a.id)} className="btn-ghost p-1.5 rounded-md" title={a.hidden ? 'ขอเผยแพร่' : 'ร้องขอซ่อน'}>
-                      {a.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
-                    </button>
-                    <button onClick={() => handleEdit(a)} className="btn-ghost p-1.5 rounded-md"><Edit2 size={14} /></button>
-                    <button onClick={() => handleDelete(a.id)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+        {tab === 'campaigns' && (
+          myAds.length > 0 ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5">
+              {myAds.map(a => (
+                <div key={a.id} className={`bg-card rounded-2xl p-6 border transition-colors ${a.hidden ? 'border-red-500/20' : 'border-green-400/20'}`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`badge ${a.hidden ? 'badge-red' : 'badge-green'}`}>
+                      {a.hidden ? 'ระงับ/รออนุมัติ' : 'เผยแพร่แล้ว'}
+                    </span>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleToggleVis(a.id)} className="btn-ghost p-1.5 rounded-md" title={a.hidden ? 'ขอเผยแพร่' : 'ร้องขอซ่อน'}>
+                        {a.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+                      </button>
+                      <button onClick={() => handleEdit(a)} className="btn-ghost p-1.5 rounded-md"><Edit2 size={14} /></button>
+                      <button onClick={() => handleDelete(a.id)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+                    </div>
                   </div>
+                  
+                  <h3 className="font-serif text-[18px] mb-2 text-main">{a.title}</h3>
+                  <p className="text-muted text-[14px] leading-[1.6] mb-4 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">{a.description}</p>
+                  <div className="text-[12px] text-white/20 flex items-center gap-1.5"><MapPin size={12}/> พิกัด: {a.lat || '-'}, {a.lng || '-'}</div>
+                  <div className="text-[12px] text-gold mt-1 flex items-center gap-1.5"><Star size={12} fill="currentColor"/> {a.pointsRequired > 0 ? `ใช้ ${a.pointsRequired} แต้มในการแลก` : 'แจกสิทธิ์ฟรี (0 แต้ม)'}</div>
+                  <div className="text-[12px] text-white/20 mt-1">เพิ่มเมื่อ: {new Date(a.createdAt).toLocaleDateString('th-TH')}</div>
                 </div>
-                
-                <h3 className="font-serif text-[18px] mb-2 text-main">{a.title}</h3>
-                <p className="text-muted text-[14px] leading-[1.6] mb-4 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">{a.description}</p>
-                <div className="text-[12px] text-white/20 flex items-center gap-1.5"><MapPin size={12}/> พิกัด: {a.lat || '-'}, {a.lng || '-'}</div>
-                <div className="text-[12px] text-gold mt-1 flex items-center gap-1.5"><Star size={12} fill="currentColor"/> {a.pointsRequired > 0 ? `ใช้ ${a.pointsRequired} แต้มในการแลก` : 'แจกสิทธิ์ฟรี (0 แต้ม)'}</div>
-                <div className="text-[12px] text-white/20 mt-1">เพิ่มเมื่อ: {new Date(a.createdAt).toLocaleDateString('th-TH')}</div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-[60px] px-6 bg-card rounded-2xl border border-dashed border-white/10">
+              <Ticket size={40} className="text-muted mx-auto mb-4" />
+              <div className="text-main text-[16px] mb-2">ยังไม่มีตั๋วสิทธิพิเศษ</div>
+              <div className="text-muted text-[14px]">สร้างตั๋วใบแรกของคุณเพื่อให้ผู้ใช้สามารถนำแต้มมาแลกรับสิทธิ์ได้เลย</div>
+            </div>
+          )
+        )}
+
+        {tab === 'tickets' && (
+          <div>
+            <div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-stretch gap-4">
+              <h3 className="font-serif text-[20px] m-0">ประวัติผู้ขอรับสิทธิ์และการใช้ตั๋ว</h3>
+              <div className="relative">
+                <input 
+                  type="text" 
+                  value={ticketSearch} 
+                  onChange={e => setTicketSearch(e.target.value)} 
+                  placeholder="ค้นหาด้วยรหัสตั๋ว เช่น MMM-..." 
+                  className="inp w-[300px] max-md:w-full"
+                  style={{ paddingLeft: '40px' }}
+                />
+                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-[60px] px-6 bg-card rounded-2xl border border-dashed border-white/10">
-            <Ticket size={40} className="text-muted mx-auto mb-4" />
-            <div className="text-main text-[16px] mb-2">ยังไม่มีตั๋วสิทธิพิเศษ</div>
-            <div className="text-muted text-[14px]">สร้างตั๋วใบแรกของคุณเพื่อให้ผู้ใช้สามารถนำแต้มมาแลกรับสิทธิ์ได้เลย</div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>รหัสตั๋ว</th>
+                    <th>ผู้ใช้</th>
+                    <th>ใบตั๋ว</th>
+                    <th>วันที่แลก</th>
+                    <th>สถานะ</th>
+                    <th>จัดการสิทธิ์</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTickets.map(t => {
+                    const ad = myAds.find(a => a.id === t.adId || a.id === t.adid);
+                    const usr = users.find(u => u.id === t.userId || u.id === t.userid);
+                    return (
+                      <tr key={t.id}>
+                        <td className="font-mono text-gold bg-gold/5 px-2 py-1 rounded-md max-w-max my-2 whitespace-nowrap">{t.ticketCode || t.ticket_code}</td>
+                        <td>{usr ? usr.name : '-'}</td>
+                        <td>{ad ? ad.title : '-'}</td>
+                        <td>{new Date(t.redeemedAt || t.redeemed_at).toLocaleString('th-TH')}</td>
+                        <td>
+                          {t.used ? 
+                            <span className="text-muted bg-white/5 px-2 py-0.5 rounded-full text-xs">ใช้สิทธิ์แล้ว</span> : 
+                            <span className="text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full text-xs">รอการใช้งาน</span>
+                          }
+                        </td>
+                        <td>
+                          <button onClick={() => handleToggleUsed(t.id, t.used)} className="btn-ghost py-1.5 px-3 rounded-md text-[13px] inline-flex items-center gap-1.5">
+                            {t.used ? <EyeOff size={14} /> : <Check size={14} className="text-green-400"/>} 
+                            {t.used ? 'ยกเลิกการใช้' : 'ยืนยันรับสิทธิ์'}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  {filteredTickets.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="text-center py-8 text-muted">ไม่พบข้อมูลตั๋วที่ค้นหา</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

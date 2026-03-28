@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Trash2, Edit2, Plus, Users, Film, MapPin, LayoutDashboard, Megaphone, LogIn, Shield, Ticket, Check } from 'lucide-react';
+import { Eye, EyeOff, Trash2, Edit2, Plus, Users, Film, MapPin, LayoutDashboard, Megaphone, LogIn, Shield, Ticket, Check, Search } from 'lucide-react';
 import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { UserDB, MovieController, LocationController, AdController, TicketController, supabase } from '../services/db';
@@ -10,6 +10,7 @@ const AdminPage = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState('movies');
   const [updater, setUpdater] = useState(0);
+  const [ticketSearch, setTicketSearch] = useState('');
 
   const [modalType, setModalType] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
@@ -125,6 +126,14 @@ const AdminPage = () => {
   const ads = AdController.list();
   const users = UserDB.list();
   const tickets = TicketController.list();
+
+  const filteredTickets = React.useMemo(() => {
+    let list = tickets;
+    if (ticketSearch) {
+      list = list.filter(t => t.ticketCode?.toLowerCase().includes(ticketSearch.toLowerCase()));
+    }
+    return list.sort((a, b) => new Date(b.redeemedAt || b.redeemed_at) - new Date(a.redeemedAt || a.redeemed_at));
+  }, [tickets, ticketSearch]);
 
   return (
     <div className="max-w-[1200px] mx-auto pt-[100px] pb-16 px-6">
@@ -250,12 +259,25 @@ const AdminPage = () => {
         {/* TICKETS TAB */}
         {tab === 'tickets' && (
           <div>
-            <h3 className="font-serif mb-4 text-[20px]">ประวัติตั๋วและสิทธิ์พิเศษที่ถูกผู้ใช้แลกไป</h3>
+            <div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-stretch gap-4">
+              <h3 className="font-serif text-[20px] m-0">ประวัติตั๋วและสิทธิ์พิเศษที่ถูกผู้ใช้แลกไป</h3>
+              <div className="relative">
+                <input 
+                  type="text" 
+                  value={ticketSearch} 
+                  onChange={e => setTicketSearch(e.target.value)} 
+                  placeholder="ค้นหาด้วยรหัสตั๋ว เช่น MMM-..." 
+                  className="inp w-[300px] max-md:w-full"
+                  style={{ paddingLeft: '40px' }}
+                />
+                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table>
                 <thead><tr><th>ID</th><th>รหัสตั๋ว</th><th>ชื่อตั๋ว (สิทธิพิเศษ)</th><th>ผู้ใช้</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
                 <tbody>
-                  {tickets.map(t => {
+                  {filteredTickets.map(t => {
                     const ad = ads.find(a => a.id === t.adId || a.id === t.adid);
                     const usr = users.find(u => u.id === t.userId || u.id === t.userid);
                     return (
@@ -278,6 +300,11 @@ const AdminPage = () => {
                       </tr>
                     )
                   })}
+                  {filteredTickets.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="text-center py-8 text-muted">ไม่พบข้อมูลตั๋วที่ค้นหา</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
