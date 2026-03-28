@@ -59,6 +59,12 @@ export const initDB = async () => {
     memoryDB.reviews = normalize(rvRes.data);
     memoryDB.rewards = normalize(rwRes.data);
     memoryDB.ads = normalize(aRes.data);
+
+    // Bind movieId to locations for AdminPage display
+    memoryDB.locations.forEach(loc => {
+      const scene = memoryDB.scenes.find(s => s.locationId === loc.id);
+      if (scene) loc.movieId = scene.movieId;
+    });
     
     // Process points into key-value map
     if (!pRes.error) {
@@ -230,25 +236,60 @@ export const LocationController = {
   list() { return memoryDB.locations; },
   get(id) { return memoryDB.locations.find(l => l.id === parseInt(id)); },
   async add(data) {
-    const payload = denormalize({ ...data, hidden: false, createdAt: new Date().toISOString() });
+    const { movieId, ...locationData } = data;
+    const payload = denormalize({ ...locationData, hidden: false, createdAt: new Date().toISOString() });
     const { data: res, error } = await supabase.from('locations').insert(payload).select().single();
     if (error) throw error;
+    
     const normalized = normalize([res])[0];
+    
+    if (movieId) {
+      const scenePayload = { movieid: movieId, locationid: normalized.id, description: locationData.description || '', imgurl: '' };
+      const { data: sRes, error: sErr } = await supabase.from('scenes').insert(scenePayload).select().single();
+      if (!sErr && sRes) {
+        memoryDB.scenes.push(normalize([sRes])[0]);
+      }
+      normalized.movieId = parseInt(movieId);
+    }
+    
     memoryDB.locations.push(normalized);
     return normalized;
   },
   async update(id, data) {
-    const payload = denormalize(data);
+    const { movieId, ...locationData } = data;
+    const payload = denormalize(locationData);
     const { data: res, error } = await supabase.from('locations').update(payload).eq('id', id).select().single();
     if (error) throw error;
+    
     const normalized = normalize([res])[0];
     const idx = memoryDB.locations.findIndex(l => l.id === parseInt(id));
+    
+    // Manage scene relation
+    if (movieId !== undefined) {
+      const existingScene = memoryDB.scenes.find(s => s.locationId === parseInt(id));
+      if (existingScene) {
+        if (existingScene.movieId !== parseInt(movieId)) {
+          await supabase.from('scenes').update({ movieid: movieId }).eq('id', existingScene.id);
+          existingScene.movieId = parseInt(movieId);
+        }
+      } else if (movieId) {
+        const scenePayload = { movieid: movieId, locationid: parseInt(id), description: locationData.description || normalized.description || '', imgurl: '' };
+        const { data: sRes, error: sErr } = await supabase.from('scenes').insert(scenePayload).select().single();
+        if (!sErr && sRes) memoryDB.scenes.push(normalize([sRes])[0]);
+      }
+      normalized.movieId = parseInt(movieId);
+    } else {
+      const existingScene = memoryDB.scenes.find(s => s.locationId === parseInt(id));
+      if (existingScene) normalized.movieId = existingScene.movieId;
+    }
+
     if (idx !== -1) memoryDB.locations[idx] = normalized;
     return normalized;
   },
   async delete(id) {
     await supabase.from('locations').delete().eq('id', id);
     memoryDB.locations = memoryDB.locations.filter(l => l.id !== parseInt(id));
+    memoryDB.scenes = memoryDB.scenes.filter(s => s.locationId !== parseInt(id));
   },
   async toggleVisibility(id) {
     const l = memoryDB.locations.find(x => x.id === parseInt(id));

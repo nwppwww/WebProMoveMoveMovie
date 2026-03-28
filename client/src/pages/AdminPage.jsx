@@ -186,12 +186,13 @@ const AdminPage = () => {
             </div>
             <div className="overflow-x-auto">
               <table>
-                <thead><tr><th>ID</th><th>ชื่อสถานที่</th><th>จังหวัด</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+                <thead><tr><th>ID</th><th>ชื่อสถานที่</th><th>ภาพยนตร์</th><th>จังหวัด</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
                 <tbody>
                   {locations.map(l => (
                     <tr key={l.id}>
                       <td>{l.id}</td>
                       <td>{l.name}</td>
+                      <td className="text-gold font-medium">{movies.find(m => m.id === l.movieId)?.title || '-'}</td>
                       <td>{l.province}</td>
                       <td>{l.hidden ? <span className="text-muted"><EyeOff size={14} className="inline mr-1" /> ซ่อน</span> : <span className="text-gold"><Eye size={14} className="inline mr-1" /> แสดง</span>}</td>
                       <td>
@@ -308,8 +309,23 @@ const AdminPage = () => {
           {modalType === 'locations' && (
             <>
               <Field label="ชื่อสถานที่"><input required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="inp" /></Field>
-              <Field label="จังหวัด"><input required value={formData.province || ''} onChange={e => setFormData({ ...formData, province: e.target.value })} className="inp" /></Field>
-              <Field label="ประเภท"><input required value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })} className="inp" placeholder="Temple, Beach, Cafe..."/></Field>
+              <Field label="ภาพยนตร์ที่เกี่ยวข้อง">
+                <select 
+                  required 
+                  value={formData.movieId || ''} 
+                  onChange={e => setFormData({ ...formData, movieId: parseInt(e.target.value) })}
+                  className="inp px-3"
+                >
+                  <option value="">-- เลือกภาพยนตร์ --</option>
+                  {movies.map(m => (
+                    <option key={m.id} value={m.id}>{m.title} ({m.releaseYear})</option>
+                  ))}
+                </select>
+              </Field>
+              <div className="flex gap-4 max-md:flex-col">
+                <Field label="จังหวัด" className="flex-1"><input required value={formData.province || ''} onChange={e => setFormData({ ...formData, province: e.target.value })} className="inp" /></Field>
+                <Field label="ประเภท" className="flex-1"><input required value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })} className="inp" placeholder="Temple, Beach, Cafe..."/></Field>
+              </div>
               
               <MapPicker 
                 lat={formData.lat} 

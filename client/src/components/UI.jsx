@@ -108,8 +108,20 @@ export const MapPicker = ({ lat, lng, onPick, height = 280 }) => {
 
   const extractProvince = (addr) => {
     if (!addr) return '';
-    const p = addr.province || addr.state || addr.city || addr.town || addr.village;
-    return p ? p.replace('จังหวัด', '').replace('Province', '').trim() : '';
+    // Priority order for Thai addressing
+    let p = addr.province || addr.state || addr.city || addr.town || addr.village;
+    if (!p) return '';
+    
+    // Clean common prefixes for Thai provinces
+    return p
+      .replace('จังหวัด', '')
+      .replace('Province', '')
+      .replace('Changwat', '')
+      .replace('State of ', '')
+      .replace('City of ', '')
+      .replace('Special Administrative Area of ', '')
+      .replace('Sukhaphiban ', '')
+      .trim();
   };
 
   const reverseGeocode = async (lat, lng) => {
