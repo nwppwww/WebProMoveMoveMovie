@@ -45,34 +45,34 @@ const normalize = (list) => (list || []).map(item => {
 
 export const initDB = async () => {
   try {
-    const [uRes, mRes, lRes, sRes, rvRes, rwRes, aRes, pRes, fRes, cRes, tRes] = await Promise.all([
-      supabase.from('users').select('*'),
-      supabase.from('movies').select('*'),
-      supabase.from('locations').select('*'),
-      supabase.from('scenes').select('*'),
-      supabase.from('reviews').select('*'),
-      supabase.from('rewards').select('*'),
-      supabase.from('ads').select('*'),
-      supabase.from('points').select('*'),
-      supabase.from('favorites').select('*'),
-      supabase.from('checkins').select('*'),
-      supabase.from('tickets').select('*')
+    const fetchTable = async (table) => {
+      try {
+        const { data, error } = await supabase.from(table).select('*');
+        if (error) throw error;
+        return data || [];
+      } catch (e) {
+        console.warn(`Failed to fetch ${table}:`, e.message);
+        return [];
+      }
+    };
+
+    const [uData, mData, lData, sData, rvData, rwData, aData, pData, fData, cData, tData] = await Promise.all([
+      fetchTable('users'), fetchTable('movies'), fetchTable('locations'),
+      fetchTable('scenes'), fetchTable('reviews'), fetchTable('rewards'),
+      fetchTable('ads'), fetchTable('points'), fetchTable('favorites'),
+      fetchTable('checkins'), fetchTable('tickets')
     ]);
 
-    if (mRes.error) console.error('Supabase Error (movies): ' + mRes.error.message);
-    if (lRes.error) console.error('Supabase Error (locations): ' + lRes.error.message);
-    if (sRes.error) console.error('Supabase Error (scenes): ' + sRes.error.message);
-
-    memoryDB.users = normalize(uRes.data);
-    memoryDB.movies = normalize(mRes.data);
-    memoryDB.locations = normalize(lRes.data);
-    memoryDB.scenes = normalize(sRes.data);
-    memoryDB.reviews = normalize(rvRes.data);
-    memoryDB.rewards = normalize(rwRes.data);
-    memoryDB.ads = normalize(aRes.data);
-    memoryDB.favorites = !fRes.error ? (fRes.data || []) : [];
-    memoryDB.checkins  = !cRes.error ? (cRes.data || []) : [];
-    memoryDB.tickets   = !tRes.error ? normalize(tRes.data || []) : [];
+    memoryDB.users = normalize(uData);
+    memoryDB.movies = normalize(mData);
+    memoryDB.locations = normalize(lData);
+    memoryDB.scenes = normalize(sData);
+    memoryDB.reviews = normalize(rvData);
+    memoryDB.rewards = normalize(rwData);
+    memoryDB.ads = normalize(aData);
+    memoryDB.favorites = fData;
+    memoryDB.checkins = cData;
+    memoryDB.tickets = normalize(tData);
 
     // Bind movieId to locations for AdminPage display
     memoryDB.locations.forEach(loc => {
@@ -81,19 +81,18 @@ export const initDB = async () => {
     });
     
     // Process points into key-value map
-    if (!pRes.error) {
-      const pmap = {};
-      (pRes.data || []).forEach(p => {
-         const uid = p.userId || p.userid || p.user_id;
-         if (uid !== undefined && uid !== null) {
-           pmap[uid] = p.amount;
-         }
-      });
-      memoryDB.points = pmap;
-    }
+    const pmap = {};
+    pData.forEach(p => {
+       const uid = p.userId || p.userid || p.user_id;
+       if (uid !== undefined && uid !== null) {
+         pmap[uid] = p.amount;
+       }
+    });
+    memoryDB.points = pmap;
+    
     console.log('✅ Supabase initialized', memoryDB);
   } catch (error) {
-    console.error('❌ Failed to connect to Supabase:', error);
+    console.error('❌ Critical initialization error:', error);
   }
 };
 

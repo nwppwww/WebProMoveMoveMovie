@@ -22,7 +22,7 @@ function App() {
   const [dbReady, setDbReady] = React.useState(false);
 
   React.useEffect(() => {
-    initDB().then(() => setDbReady(true));
+    initDB().finally(() => setDbReady(true));
   }, []);
 
   if (!dbReady) {
