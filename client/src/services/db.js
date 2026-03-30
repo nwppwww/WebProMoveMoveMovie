@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = window.location.origin + '/api/supabase'; // ส่งคำขอผ่าน Backend (Express)
-const supabaseKey = 'dummy_key_เพราะ_backend_จัดการเรื่อง_security_แทน'; // คีย์จริงซ่อนอยู่ฝั่ง Server
+// เปลี่ยนให้เรียก Supabase ตรงๆ (เพื่อให้ใช้บน Vercel ได้เลยโดยไม่ต้องมัวแต่รัน Express)
+const supabaseUrl = 'https://dbxerewphusfequsqthz.supabase.co';
+const supabaseKey = 'sb_publishable_8hLBy1wLAbZQ-jeHrac-ag_FNg32_LK';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 

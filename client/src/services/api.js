@@ -1,39 +1,49 @@
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: '/api',
+// ─── TMDB Direct API (สำหรับการรันบน Vercel ที่ไม่มี Backend) ────────
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+const TMDB_KEY = 'c3bfb718ba9a7d50b163232bd60578e6';
+
+const tmdbApi = axios.create({
+  baseURL: TMDB_BASE,
+  params: { api_key: TMDB_KEY, language: 'th-TH' },
   headers: { 'Content-Type': 'application/json' },
 })
 
-// ─── interceptor แสดง error ใน console ─────────────────────
-api.interceptors.response.use(
+tmdbApi.interceptors.response.use(
   res => res,
   err => {
-    console.error('API Error:', err.response?.data || err.message)
+    console.error('TMDB API Error:', err.response?.data || err.message)
     return Promise.reject(err)
   }
 )
 
-// ─── Movies ─────────────────────────────────────────────────
+// ตำแหน่งเดิมของ Local API backend
+const localApi = axios.create({
+  baseURL: 'http://localhost:5000/api', // หากต้องการรัน Local backend
+  headers: { 'Content-Type': 'application/json' },
+})
+
+// ─── Movies (TMDB) ───────────────────────────────────────────
 export const movieAPI = {
-  search:     (q)      => api.get(`/movies/search?q=${encodeURIComponent(q)}`),
-  getPopular: ()       => api.get('/movies/popular'),
-  getById:    (tmdbId) => api.get(`/movies/${tmdbId}`),
+  search:     (q)      => tmdbApi.get(`/search/movie?query=${encodeURIComponent(q)}`),
+  getPopular: ()       => tmdbApi.get('/movie/popular'),
+  getById:    (tmdbId) => tmdbApi.get(`/movie/${tmdbId}`),
 }
 
-// ─── Locations ───────────────────────────────────────────────
+// ─── Locations (Local Backend / Not Active on Vercel) ──────────
 export const locationAPI = {
-  getAll:     ()        => api.get('/locations'),
-  getById:    (id)      => api.get(`/locations/${id}`),
-  getByMovie: (tmdbId)  => api.get(`/locations/movie/${tmdbId}`),
-  create:     (data)    => api.post('/locations', data),
-  update:     (id, data)=> api.put(`/locations/${id}`, data),
-  delete:     (id)      => api.delete(`/locations/${id}`),
+  getAll:     ()        => localApi.get('/locations'),
+  getById:    (id)      => localApi.get(`/locations/${id}`),
+  getByMovie: (tmdbId)  => localApi.get(`/locations/movie/${tmdbId}`),
+  create:     (data)    => localApi.post('/locations', data),
+  update:     (id, data)=> localApi.put(`/locations/${id}`, data),
+  delete:     (id)      => localApi.delete(`/locations/${id}`),
 }
 
-// ─── Reviews ────────────────────────────────────────────────
+// ─── Reviews (Local Backend / Not Active on Vercel) ────────────
 export const reviewAPI = {
-  getByLocation: (locationId) => api.get(`/reviews/location/${locationId}`),
-  create:        (data)       => api.post('/reviews', data),
-  delete:        (id)         => api.delete(`/reviews/${id}`),
+  getByLocation: (locationId) => localApi.get(`/reviews/location/${locationId}`),
+  create:        (data)       => localApi.post('/reviews', data),
+  delete:        (id)         => localApi.delete(`/reviews/${id}`),
 }
