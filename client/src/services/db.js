@@ -222,8 +222,9 @@ export const MovieController = {
   list() { return memoryDB.movies; },
   get(id) { return memoryDB.movies.find(m => m.id === parseInt(id)); },
   scenes(movieId) { 
+    const pid = parseInt(movieId);
     return memoryDB.scenes.filter(s => 
-      (s.movieId === parseInt(movieId)) || (s.movieid === parseInt(movieId))
+      (s.movieId === pid) || (s.movieid === pid)
     ); 
   },
   async add(data) {

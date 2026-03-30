@@ -18,7 +18,7 @@ const MovieDetailPage = () => {
       if (db) {
         setMovie(db);
         document.title = `Move³Movie | ${db.title || 'หนัง'}`;
-        setScenes(MovieController.scenes(parseInt(id)));
+        setScenes(MovieController.scenes(id)); // Controller handles parsing
       }
       setLoading(false);
     }, 400);
@@ -52,8 +52,14 @@ const MovieDetailPage = () => {
     <>
       {/* Hero Section */}
       <div className="relative h-[60vh] min-h-[400px]">
-        <div className="absolute inset-0">
-          <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-[#0D0D1A]">
+          <img 
+            src={movie.poster} 
+            alt={movie.title} 
+            className="w-full h-full object-cover"
+            onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+          />
+          <div className="absolute inset-0 hidden items-center justify-center text-[80px] bg-[#1A1A2E]">🎬</div>
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(7,7,15,0.4)] to-[#07070F]" />
         </div>
         <Particles count={15} />
