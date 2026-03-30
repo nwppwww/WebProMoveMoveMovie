@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://dbxerewphusfequsqthz.supabase.co';
-const supabaseKey = 'sb_publishable_8hLBy1wLAbZQ-jeHrac-ag_FNg32_LK';
+const supabaseUrl = window.location.origin + '/api/supabase'; // ส่งคำขอผ่าน Backend (Express)
+const supabaseKey = 'dummy_key_เพราะ_backend_จัดการเรื่อง_security_แทน'; // คีย์จริงซ่อนอยู่ฝั่ง Server
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 

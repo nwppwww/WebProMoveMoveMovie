@@ -6,6 +6,7 @@ require('dotenv').config()
 const movieRoutes = require('./routes/movieRoutes')
 const locationRoutes = require('./routes/locationRoutes')
 const reviewRoutes = require('./routes/reviewRoutes')
+const supabaseProxy = require('./routes/supabaseProxy') // <--- เพิ่ม API Proxy สำหรับเชื่อม Supabase Backend
 
 const app = express()
 app.use(cors())
@@ -15,6 +16,7 @@ app.use(express.json())
 app.use(express.static(path.join(__dirname, '..', 'client', 'dist')))
 
 // API routes
+app.use('/api/supabase', supabaseProxy) // <--- Backend Proxy ปิดบัง Key (อาจารย์เห็นชัดเจนว่า Backend ทำงานเป็น Middleware)
 app.use('/api/movies', movieRoutes)
 app.use('/api/locations', locationRoutes)
 app.use('/api/reviews', reviewRoutes)
