@@ -5,7 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import { AdController, LocationController, MovieController, TicketController, UserDB } from '../services/db';
 
 const PartnerPage = () => {
-  const { user, toast } = useAppContext();
+  const { user, toast, confirm } = useAppContext();
   const [updater, setUpdater] = useState(0);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -75,12 +75,12 @@ const PartnerPage = () => {
     setModalOpen(true);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('ยืนยันลบตั๋วสิทธิพิเศษนี้?')) {
-      AdController.delete(id);
+  const handleDelete = (id, displayName) => {
+    confirm(`ยืนยันการลบตั๋วสิทธิพิเศษ "${displayName}" ออกจากระบบ?`, async () => {
+      await AdController.delete(id);
       toast('ลบตั๋วเรียบร้อย');
       refresh();
-    }
+    });
   };
 
   const handleToggleVis = (id) => {
@@ -159,7 +159,7 @@ const PartnerPage = () => {
                         {a.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
                       </button>
                       <button onClick={() => handleEdit(a)} className="btn-ghost p-1.5 rounded-md"><Edit2 size={14} /></button>
-                      <button onClick={() => handleDelete(a.id)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+                      <button onClick={() => handleDelete(a.id, a.title)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
                     </div>
                   </div>
                   
