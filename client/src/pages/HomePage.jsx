@@ -3,21 +3,49 @@ import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Heart, ChevronRight, PlayCircle } from 'lucide-react';
 import { Particles } from '../components/UI';
 import { MovieController, LocationController, FavoriteController } from '../services/db';
+import { movieAPI, locationAPI } from '../services/api';
 import { useAppContext } from '../context/AppContext';
+import { Shimmer } from '../components/UI';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { user, toast } = useAppContext();
   const [q, setQ] = useState('');
+  const [popMovies, setPopMovies] = useState([]);
+  const [popLocations, setPopLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [favoritedIds, setFavoritedIds] = useState(() => {
     if (!user) return new Set();
     return new Set(FavoriteController.getUserFavorites(user.id));
   });
   const [togglingId, setTogglingId] = useState(null);
 
-  const allMovies = MovieController.list();
-  const popMovies = allMovies.slice(0, 12);
-  const popLocations = LocationController.list().filter(l => !l.hidden).slice(0, 6);
+  React.useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [mRes, lRes] = await Promise.all([
+          movieAPI.getPopular(),
+          locationAPI.getAll() // Slice manually or can use SB filter
+        ]);
+
+        // Normalize keys
+        const normalizedMovies = (mRes.data || []).map(m => ({
+          ...m,
+          releaseYear: m.releaseyear || m.release_year
+        }));
+
+        setPopMovies(normalizedMovies);
+        setPopLocations((lRes.data || []).slice(0, 6)); // Top 6 locations
+      } catch (err) {
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -55,18 +83,18 @@ const HomePage = () => {
     <div>
       <div className="hero-bg min-h-[93vh] flex flex-col items-center justify-center text-center pt-[76px] pb-[60px] px-6">
         <Particles count={25} />
-        
+
         <div className="animate-fade-up delay-100 relative z-10">
           <span className="badge mb-5">
-            <PlayCircle size={12} className="inline mr-1 align-middle" /> 
+            <PlayCircle size={12} className="inline mr-1 align-middle" />
             ระบบแนะนำสถานที่ถ่ายทำตามรอยภาพยนตร์
           </span>
         </div>
-        
+
         <h1 className="animate-fade-up delay-200 font-serif text-[clamp(38px,7vw,76px)] leading-[1.1] m-0 mb-4 max-w-[820px] relative z-10">
           ตามรอย<span className="gold-text">ภาพยนตร์</span><br />ในสถานที่จริง
         </h1>
-        
+
         <p className="animate-fade-up delay-300 text-[17px] text-muted max-w-[500px] m-0 mb-9 leading-[1.75] relative z-10">
           ค้นพบสถานที่ถ่ายทำหนังและซีรีส์ไทยที่คุณชื่นชอบ<br />พร้อมรีวิวจากผู้ที่ไปตามรอยจริง
         </p>
@@ -92,15 +120,17 @@ const HomePage = () => {
             ดูทั้งหมด ({allMovies.length}) <ChevronRight size={14} />
           </button>
         </div>
-        
+
         <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-5 max-md:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] max-md:gap-3.5 2xl:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-          {popMovies.map(m => (
-            <div key={m.id} className="card-hover rounded-2xl" onClick={() => navigate(`/movies/${m.id}`)}>
+          {loading ? (
+            [1, 2, 3, 4].map(i => <Shimmer key={i} h={280} r={16} />)
+          ) : popMovies.map(m => (
+            <div key={m.id} className="card-hover rounded-2xl cursor-pointer" onClick={() => navigate(`/movies/${m.id}`)}>
               <div className="pt-[140%] relative">
-                <img 
-                  src={m.poster} 
-                  alt={m.title} 
-                  className="absolute inset-0 w-full h-full object-cover" 
+                <img
+                  src={m.poster}
+                  alt={m.title}
+                  className="absolute inset-0 w-full h-full object-cover"
                   onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                 />
                 <div className="absolute inset-0 bg-[#1A1A2E] hidden items-center justify-center text-[40px]">🎬</div>

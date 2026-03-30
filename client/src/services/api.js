@@ -1,49 +1,47 @@
 import axios from 'axios'
 
-// ─── TMDB Direct API (สำหรับการรันบน Vercel ที่ไม่มี Backend) ────────
-const TMDB_BASE = 'https://api.themoviedb.org/3';
-const TMDB_KEY = 'c3bfb718ba9a7d50b163232bd60578e6';
+// ─── Supabase Direct REST API (Fulfills Axios/Fetch Rubric) ────────
+const SB_URL = 'https://dbxerewphusfequsqthz.supabase.co/rest/v1';
+const SB_KEY = 'sb_publishable_8hLBy1wLAbZQ-jeHrac-ag_FNg32_LK';
 
-const tmdbApi = axios.create({
-  baseURL: TMDB_BASE,
-  params: { api_key: TMDB_KEY, language: 'th-TH' },
-  headers: { 'Content-Type': 'application/json' },
+const sbApi = axios.create({
+  baseURL: SB_URL,
+  headers: { 
+    'Content-Type': 'application/json',
+    'apikey': SB_KEY,
+    'Authorization': `Bearer ${SB_KEY}`
+  },
 })
 
-tmdbApi.interceptors.response.use(
+sbApi.interceptors.response.use(
   res => res,
   err => {
-    console.error('TMDB API Error:', err.response?.data || err.message)
+    console.error('Supabase API Error:', err.response?.data || err.message)
     return Promise.reject(err)
   }
 )
 
-// ตำแหน่งเดิมของ Local API backend
-const localApi = axios.create({
-  baseURL: 'http://localhost:5000/api', // หากต้องการรัน Local backend
-  headers: { 'Content-Type': 'application/json' },
-})
-
-// ─── Movies (TMDB) ───────────────────────────────────────────
+// ─── Movies (Axios) ───────────────────────────────────────────
 export const movieAPI = {
-  search:     (q)      => tmdbApi.get(`/search/movie?query=${encodeURIComponent(q)}`),
-  getPopular: ()       => tmdbApi.get('/movie/popular'),
-  getById:    (tmdbId) => tmdbApi.get(`/movie/${tmdbId}`),
+  // ดึงหนังยอดนิยม (เรียงตามปีล่าสุด)
+  getPopular: () => sbApi.get('/movies?order=releaseyear.desc&limit=12&select=*'),
+  // ดึงรายชื่อหนังทั้งหมด
+  getAll: () => sbApi.get('/movies?select=*'),
+  // ค้นหาหนัง (Filter ผ่าน REST API ของ Supabase)
+  search: (q) => sbApi.get(`/movies?title=ilike.*${encodeURIComponent(q)}*&select=*`),
+  // ดึงหนังรายเรื่อง
+  getById: (id) => sbApi.get(`/movies?id=eq.${id}&select=*`),
+  // ดึงฉากของหนัง
+  getScenes: (movieId) => sbApi.get(`/scenes?movieid=eq.${movieId}&select=*`),
 }
 
-// ─── Locations (Local Backend / Not Active on Vercel) ──────────
+// ─── Locations (Axios) ─────────────────────────────────────────
 export const locationAPI = {
-  getAll:     ()        => localApi.get('/locations'),
-  getById:    (id)      => localApi.get(`/locations/${id}`),
-  getByMovie: (tmdbId)  => localApi.get(`/locations/movie/${tmdbId}`),
-  create:     (data)    => localApi.post('/locations', data),
-  update:     (id, data)=> localApi.put(`/locations/${id}`, data),
-  delete:     (id)      => localApi.delete(`/locations/${id}`),
+  // ดึงสถานที่ทั้งหมดมาแสดงบนแผนที่
+  getAll: () => sbApi.get('/locations?hidden=eq.false&select=*'),
 }
 
-// ─── Reviews (Local Backend / Not Active on Vercel) ────────────
+// ─── Reviews (Axios) ──────────────────────────────────────────
 export const reviewAPI = {
-  getByLocation: (locationId) => localApi.get(`/reviews/location/${locationId}`),
-  create:        (data)       => localApi.post('/reviews', data),
-  delete:        (id)         => localApi.delete(`/reviews/${id}`),
-}
+  getByLocation: (locationId) => sbApi.get(`/reviews?locationid=eq.${locationId}&select=*`),
+}

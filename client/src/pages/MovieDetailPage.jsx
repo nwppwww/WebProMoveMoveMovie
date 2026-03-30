@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar, MapPin, Film } from 'lucide-react';
 import { Shimmer, Particles } from '../components/UI';
 import { MovieController, LocationController } from '../services/db';
+import { movieAPI } from '../services/api';
 
 const MovieDetailPage = () => {
   const { id } = useParams();
@@ -12,17 +13,40 @@ const MovieDetailPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      const db = MovieController.get(id);
-      if (db) {
-        setMovie(db);
-        document.title = `Move³Movie | ${db.title || 'หนัง'}`;
-        setScenes(MovieController.scenes(id)); // Controller handles parsing
-      }
-      setLoading(false);
-    }, 400);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [mRes, sRes] = await Promise.all([
+          movieAPI.getById(id),
+          movieAPI.getScenes(id)
+        ]);
 
+        if (mRes.data && mRes.data.length > 0) {
+          const m = mRes.data[0];
+          const normalized = {
+            ...m,
+            releaseYear: m.releaseyear || m.release_year
+          };
+          setMovie(normalized);
+          document.title = `Move³Movie | ${normalized.title || 'หนัง'}`;
+
+          // Normalize scenes (movieid -> movieId, locationid -> locationId)
+          const normScenes = sRes.data.map(s => ({
+            ...s,
+            movieId: s.movieid,
+            locationId: s.locationid,
+            imgUrl: s.imgurl
+          }));
+          setScenes(normScenes);
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
     return () => { document.title = 'Move³Movie'; };
   }, [id]);
 
@@ -53,9 +77,9 @@ const MovieDetailPage = () => {
       {/* Hero Section */}
       <div className="relative h-[60vh] min-h-[400px]">
         <div className="absolute inset-0 bg-[#0D0D1A]">
-          <img 
-            src={movie.poster} 
-            alt={movie.title} 
+          <img
+            src={movie.poster}
+            alt={movie.title}
             className="w-full h-full object-cover"
             onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
           />
@@ -63,7 +87,7 @@ const MovieDetailPage = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(7,7,15,0.4)] to-[#07070F]" />
         </div>
         <Particles count={15} />
-        
+
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-[60px]">
           <div className="max-w-[1000px] mx-auto">
             <button className="btn-ghost flex items-center gap-1.5 px-4 py-2 rounded-[20px] mb-6 text-[13px]" onClick={() => navigate(-1)}>
@@ -100,7 +124,7 @@ const MovieDetailPage = () => {
               scenes.map(scene => {
                 const locData = LocationController.get(scene.locationId);
                 const locName = locData ? locData.name : 'ดูรายละเอียดสถานที่';
-                
+
                 return (
                   <div key={scene.id} className="card-hover bg-card border border-white/5 rounded-2xl overflow-hidden cursor-pointer" onClick={() => navigate(`/location/${scene.locationId}`)}>
                     <div className="h-[200px] relative">

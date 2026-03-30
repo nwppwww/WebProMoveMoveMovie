@@ -14,47 +14,29 @@ const MoviesPage = () => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Added TMDB API state to fulfill Fetch/Axios rubric requirement
-  const [tmdbMovies, setTmdbMovies] = useState([]);
-  const [apiLoading, setApiLoading] = useState(false);
-
   useEffect(() => {
     setLoading(true);
-    setApiLoading(true);
     
-    // 1. Local Local DB filter
-    const results = MovieController.list();
-    const filtered = q 
-      ? results.filter(m => m.title.toLowerCase().includes(q.toLowerCase()) || m.description?.toLowerCase().includes(q.toLowerCase()))
-      : results;
-    
-    setTimeout(() => {
-      setMovies(filtered);
-      setLoading(false);
-    }, 400); // simulate network delay for shimmer
+    // Using Axios to fetch our own data (Supabase) to fulfill Rubric requirement
+    const fetchMovies = async () => {
+      try {
+        const res = q ? await movieAPI.search(q) : await movieAPI.getAll();
+        
+        // Normalize DB keys to match UI (releaseyear -> releaseYear)
+        const normalized = res.data.map(m => ({
+          ...m,
+          releaseYear: m.releaseyear || m.release_year
+        }));
+        
+        setMovies(normalized);
+      } catch (err) {
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // 2. Real Axios API Fetching (fulfills Rubric requirement)
-    if (!q) {
-      movieAPI.getPopular()
-        .then(res => {
-          setTmdbMovies(res.data.results || []);
-          setApiLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
-          setApiLoading(false);
-        });
-    } else {
-      movieAPI.search(q)
-        .then(res => {
-          setTmdbMovies(res.data.results || []);
-          setApiLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
-          setApiLoading(false);
-        });
-    }
+    fetchMovies();
   }, [q]);
 
   const handleSearch = (e) => {
@@ -100,42 +82,6 @@ const MoviesPage = () => {
             <Popcorn size={48} className="text-white/10 mx-auto mb-4" />
             <div className="text-[18px] text-main mb-2">ไม่พบภาพยนตร์ที่ค้นหา</div>
             <div className="text-muted text-[14px]">ลองใช้คำค้นหาอื่นดูสิ!</div>
-          </div>
-        )}
-      </div>
-      <div className="flex items-center gap-3 mt-[60px] mb-7">
-        <h2 className="font-serif text-[32px] m-0">ผลลัพธ์จาก <span className="gold-text">API (TMDB)</span></h2>
-        <span className="badge badge-gray">{tmdbMovies.length} เรื่อง</span>
-      </div>
-      <p className="text-muted text-[15px] mb-6">
-        ส่วนนี้ดึงข้อมูลจริงจาก Backend API (`/api/movies`) ผ่าน Axios เพื่อสาธิตการทำงาน
-      </p>
-
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-5 max-md:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] max-md:gap-3.5 2xl:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-        {apiLoading ? (
-          [1, 2, 3, 4].map(i => <MovieCardSkeleton key={`api-${i}`} />)
-        ) : tmdbMovies.length > 0 ? (
-          tmdbMovies.map(m => (
-            <div key={`tmdb-${m.id}`} className="card-hover delay-200 rounded-2xl cursor-default">
-              <div className="pt-[140%] relative">
-                <img 
-                  src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image'} 
-                  alt={m.title} 
-                  className="absolute inset-0 w-full h-full object-cover" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(7,7,15,0.9)] via-transparent to-transparent opacity-80" />
-              </div>
-              <div className="px-3.5 py-3.5 bg-card">
-                <div className="font-semibold text-[15px] mb-1 truncate">{m.title}</div>
-                <div className="text-muted text-[13px]">
-                  {m.release_date ? m.release_date.substring(0, 4) : 'ไม่ระบุ'} • {m.vote_average ? `${m.vote_average.toFixed(1)} ⭐` : ''}
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full py-[40px] px-5 text-center text-muted">
-            ไม่พบข้อมูลจาก API
           </div>
         )}
       </div>
