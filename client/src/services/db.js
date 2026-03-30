@@ -262,7 +262,7 @@ export const LocationController = {
     const normalized = normalize([res])[0];
     
     if (movieId) {
-      const scenePayload = { movieid: movieId, locationid: normalized.id, description: locationData.description || '', imgurl: '' };
+      const scenePayload = { movieid: movieId, locationid: normalized.id, description: locationData.description || '', imgurl: normalized.imgUrl || '' };
       const { data: sRes, error: sErr } = await supabase.from('scenes').insert(scenePayload).select().single();
       if (!sErr && sRes) {
         memoryDB.scenes.push(normalize([sRes])[0]);
@@ -291,7 +291,7 @@ export const LocationController = {
           existingScene.movieId = parseInt(movieId);
         }
       } else if (movieId) {
-        const scenePayload = { movieid: movieId, locationid: parseInt(id), description: locationData.description || normalized.description || '', imgurl: '' };
+        const scenePayload = { movieid: movieId, locationid: parseInt(id), description: locationData.description || normalized.description || '', imgurl: normalized.imgUrl || '' };
         const { data: sRes, error: sErr } = await supabase.from('scenes').insert(scenePayload).select().single();
         if (!sErr && sRes) memoryDB.scenes.push(normalize([sRes])[0]);
       }

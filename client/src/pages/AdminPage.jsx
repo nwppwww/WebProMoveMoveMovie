@@ -376,6 +376,7 @@ const AdminPage = () => {
           {modalType === 'locations' && (
             <>
               <Field label="ชื่อสถานที่"><input required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="inp" /></Field>
+              <Field label="URL รูปสถานที่ (ถ้ามี)"><input value={formData.imgUrl || ''} onChange={e => setFormData({ ...formData, imgUrl: e.target.value })} className="inp" placeholder="https://..." /></Field>
               <Field label="ภาพยนตร์ที่เกี่ยวข้อง">
                 <select 
                   required 
