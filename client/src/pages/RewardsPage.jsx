@@ -86,6 +86,11 @@ const RewardsPage = () => {
                 <div key={c.id} className="card-hover delay-100 bg-card border border-white/5 rounded-2xl overflow-hidden shadow-lg border-t-gold/20 flex flex-col">
                   <div className="p-6 flex-1">
                     <span className="badge badge-gold mb-3 inline-block">Partner Ticket</span>
+                    {c.movieId && (
+                      <div className="text-[12px] text-gold/80 font-bold mb-1 uppercase tracking-wider flex items-center gap-1.5 grayscale opacity-50 contrast-125">
+                        🎬 {MovieController.get(c.movieId)?.title || 'ไม่พบชื่อภาพยนตร์'}
+                      </div>
+                    )}
                     <h3 className="font-serif text-[18px] mb-2 text-main">{c.title}</h3>
                     <p className="text-muted text-[14px] leading-[1.6] mb-4">{c.description}</p>
                   </div>

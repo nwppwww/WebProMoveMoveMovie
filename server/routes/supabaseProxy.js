@@ -6,7 +6,7 @@ const SUPABASE_URL = 'https://dbxerewphusfequsqthz.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_8hLBy1wLAbZQ-jeHrac-ag_FNg32_LK';
 
 // Catch all requests exactly via /api/supabase/
-router.all('/*', async (req, res) => {
+router.all('*splat', async (req, res) => {
   try {
     // Map localhost:5000/api/supabase/rest/v1/... -> supabase.co/rest/v1/...
     const path = req.originalUrl.replace('/api/supabase', '');

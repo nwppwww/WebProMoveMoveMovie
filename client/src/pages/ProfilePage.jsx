@@ -189,6 +189,11 @@ const ProfilePage = () => {
                     </div>
                     <div className="p-5 border-b border-dashed border-white/10 relative z-10">
                       <span className="badge badge-gold mb-3 inline-block">Partner Ticket</span>
+                      {ad?.movieId && (
+                        <div className="text-[11px] text-gold/60 font-bold mb-1 flex items-center gap-1 opacity-70">
+                          🎬 {MovieController.get(ad.movieId)?.title || 'ไม่พบชื่อภาพยนตร์'}
+                        </div>
+                      )}
                       <h3 className="font-serif text-[18px] text-main mb-2 leading-tight">{ad?.title || 'ตั๋วสิทธิพิเศษ'}</h3>
                       <p className="text-[13px] text-muted line-clamp-2">{ad?.description || 'แสดงตั๋วใบนี้กับร้านค้าที่ร่วมรายการเพื่อรับสิทธิ์'}</p>
                     </div>
