@@ -229,6 +229,9 @@ const LocationPage = () => {
                 {isFav ? 'โปรดแล้ว' : 'เพิ่มในโปรด'}
               </button>
             </div>
+            {loc.imgUrl && (
+              <img src={loc.imgUrl} alt={loc.name} className="w-full h-[300px] object-cover rounded-2xl mb-6 border border-white/10" />
+            )}
             <p className="text-[#A8A5B4] leading-[1.85] text-[15px] mb-9 max-w-[680px]">
               {loc.description || 'ไม่มีคำอธิบาย'}
             </p>

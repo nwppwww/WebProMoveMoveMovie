@@ -40,8 +40,8 @@ const AdminPage = () => {
     setModalType(type);
   };
 
-  const handleDelete = (id, controller, typeName) => {
-    confirm(`ยืนยันการลบ${typeName} ID: ${id} ออกจากระบบ?`, async () => {
+  const handleDelete = (id, controller, typeName, displayName) => {
+    confirm(`ยืนยันการลบ${typeName} "${displayName}" ออกจากระบบ?`, async () => {
       await controller.delete(id);
       toast(`ลบ${typeName}เรียบร้อย`);
       refresh();
@@ -177,7 +177,7 @@ const AdminPage = () => {
                       <td>{m.genre}</td>
                       <td>
                         <button onClick={() => handleEdit(m, 'movies')} className="btn-ghost p-1.5 rounded-md mr-2"><Edit2 size={14} /></button>
-                        <button onClick={() => handleDelete(m.id, MovieController, 'ภาพยนตร์')} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+                        <button onClick={() => handleDelete(m.id, MovieController, 'ภาพยนตร์', m.title)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   ))}
@@ -209,7 +209,7 @@ const AdminPage = () => {
                       <td>
                         <button onClick={() => handleToggleVis(l.id, LocationController)} className="btn-ghost p-1.5 rounded-md mr-2">{l.hidden ? <Eye size={14} /> : <EyeOff size={14} />}</button>
                         <button onClick={() => handleEdit(l, 'locations')} className="btn-ghost p-1.5 rounded-md mr-2"><Edit2 size={14} /></button>
-                        <button onClick={() => handleDelete(l.id, LocationController, 'สถานที่')} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+                        <button onClick={() => handleDelete(l.id, LocationController, 'สถานที่', l.name)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   ))}
@@ -246,7 +246,7 @@ const AdminPage = () => {
                             {a.hidden ? <Eye size={14} /> : <EyeOff size={14} />} 
                             {a.hidden ? 'อนุมัติ (แสดงผล)' : 'ระงับ (ซ่อน)'}
                           </button>
-                          <button onClick={() => handleDelete(a.id, AdController, 'ตั๋วสิทธิพิเศษ')} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+                          <button onClick={() => handleDelete(a.id, AdController, 'ตั๋วสิทธิพิเศษ', a.title)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
                         </td>
                       </tr>
                   )})}
@@ -295,7 +295,7 @@ const AdminPage = () => {
                           }} className="btn-ghost py-1.5 px-3 rounded-md mr-2 text-[13px] border border-white/20">
                             {t.used ? 'รีเซ็ตเป็น "พร้อมใช้"' : 'ใช้งานตั๋วนี้'}
                           </button>
-                          <button onClick={() => handleDelete(t.id, TicketController, 'ตั๋ว')} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
+                          <button onClick={() => handleDelete(t.id, TicketController, 'ตั๋ว', t.ticketCode)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
                         </td>
                       </tr>
                     )
@@ -376,6 +376,7 @@ const AdminPage = () => {
           {modalType === 'locations' && (
             <>
               <Field label="ชื่อสถานที่"><input required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="inp" /></Field>
+              <Field label="URL รูปสถานที่ (ถ้ามี)"><input value={formData.imgUrl || ''} onChange={e => setFormData({ ...formData, imgUrl: e.target.value })} className="inp" placeholder="https://..." /></Field>
               <Field label="ภาพยนตร์ที่เกี่ยวข้อง">
                 <select 
                   required 

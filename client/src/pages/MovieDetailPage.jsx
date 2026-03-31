@@ -98,7 +98,6 @@ const MovieDetailPage = () => {
               <h1 className="font-serif text-[clamp(32px,5vw,56px)] leading-[1.1] m-0 mb-4">{movie.title}</h1>
               <div className="flex flex-wrap gap-6 text-muted text-[14px]">
                 <span className="flex items-center gap-1.5"><Calendar size={16} /> {movie.releaseYear}</span>
-                <span className="flex items-center gap-1.5"><Clock size={16} /> 120 นาที</span>
               </div>
             </div>
           </div>
