@@ -34,13 +34,20 @@ INSERT INTO points (userId, amount) VALUES
 
 INSERT INTO movies (id, title, poster, description, releaseYear, genre) VALUES 
 (1, 'พี่มาก..พระโขนง', 'https://picsum.photos/500/750?movie=1', 'ภาพยนตร์สยองขวัญสุดฮิต ตำนานรักพี่มากและแม่นาคที่ทำรายได้ทะลุพันล้าน', 2013, 'Horror'),
-(2, 'ฉลาดเกมส์โกง', 'https://picsum.photos/500/750?movie=2', 'เรื่องราวของนักเรียนหญิงฉลาดที่พลิกแพลงการโกงข้อสอบระดับโลก', 2017, 'Thriller');
+(2, 'ฉลาดเกมส์โกง', 'https://picsum.photos/500/750?movie=2', 'เรื่องราวของนักเรียนหญิงฉลาดที่พลิกแพลงการโกงข้อสอบระดับโลก', 2017, 'Thriller'),
+(5, 'SuckSeed ห่วยขั้นเทพ', 'https://www.themoviedb.org/t/p/w600_and_h900_bestv2/vE2eUunIdWvYfL6E61qWwN1X9Fm.jpg', 'หนังว่าด้วยเรื่องราวของ “เป็ด” “คุ้ง” และ “เอ็กซ์” ที่ตัดสินใจก่อตั้งวงดนตรีของตัวเองขึ้นมาด้วยเป้าหมายที่อยากจะเป็นนักดนตรีระดับประเทศ...', 2011, 'Comedy/Music'),
+(6, 'วิมานหนาม', 'https://www.themoviedb.org/t/p/w600_and_h900_bestv2/6YV2L6hS7wz3q3UfQ3E8b6nS7S4.jpg', '“ทองคำ” และ “เสก” คู่รักหนุ่มชาวสวน ช่วยกันปลูกบ้านและทำสวนทุเรียนบนที่ดินของเสกที่ติดจำนองอยู่...', 2024, 'Drama/Thriller');
 
 INSERT INTO locations (id, name, lat, lng, province, description, type, hidden) VALUES
 (1, 'วัดมหาบุศย์ พระโขนง', 13.7063, 100.6018, 'Bangkok', 'วัดเก่าแก่ริมคลอง... ถ่ายทำพี่มาก', 'Temple', false);
 
-INSERT INTO scenes (id, movieId, locationId, description, imgUrl) VALUES
-(1, 1, 1, 'ฉากที่มากและเพื่อนมาเยี่ยมนาค', 'https://picsum.photos/400/250?scene=1');
+INSERT INTO scenes (movieId, locationId, description, imgUrl) VALUES
+(1, 1, 'ฉากที่มากและเพื่อนมาเยี่ยมนาค', 'https://picsum.photos/400/250?scene=1'),
+(5, 1, '“ไม่มีใครแต่อย่างน้อยมีน้ำตาคอยปลอบใจ”', 'https://picsum.photos/400/250?suckseed=1'),
+(5, 1, '“กูชอบเอิญก่อนมึงอีกนะเว้ย”', 'https://picsum.photos/400/250?suckseed=2'),
+(5, 1, '“สักครั้งในชีวิตลูกผู้ชายอย่างเรา การมาเยือนโรงเรียนหญิงล้วนฯ”', 'https://picsum.photos/400/250?suckseed=3'),
+(5, 1, '“ที่นี่แหละเว้ย เวทีประกวดรอบสุดท้าย Hot Wave”', 'https://picsum.photos/400/250?suckseed=4'),
+(5, 1, '“คือทำนองแห่งความหลังระหว่างเรา”', 'https://picsum.photos/400/250?suckseed=5');
 
 -- 3. รีสตาร์ทตัวเลข ID (Sequence)
 SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
