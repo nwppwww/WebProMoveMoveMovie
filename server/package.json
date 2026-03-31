@@ -8,7 +8,11 @@
     "dev": "nodemon index.js",
     "seed": "node database/seed.js"
   },
-  "keywords": ["movie", "thailand", "film-locations"],
+  "keywords": [
+    "movie",
+    "thailand",
+    "film-locations"
+  ],
   "author": "KMITL",
   "license": "ISC",
   "type": "commonjs",
