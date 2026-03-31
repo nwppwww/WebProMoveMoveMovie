@@ -1,4 +1,4 @@
--- 🎬 Move³Movie : Seed Data Only (Final Fix Version) --
+-- 🎬 movemovemovie : Seed Data Only (Final Fix Version) --
 -- รันโค้ดชุดนี้เพื่อล้างข้อมูลเก่าและลงข้อมูลใหม่ให้ถูกต้องครับ
 
 -- 0. ปลดล็อคระบบความปลอดภัย (RLS) ทั้งหมด
@@ -51,3 +51,6 @@ SELECT setval('points_id_seq', (SELECT MAX(id) FROM points));
 -- 4. ย้ำสิทธิ์การเข้าถึง
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO anon;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO anon;
+
+-- 5. เพิ่มคอลัมน์คะแนนในตาราง ads (หากยังไม่มี)
+ALTER TABLE ads ADD COLUMN IF NOT EXISTS pointsrequired INT DEFAULT 0;

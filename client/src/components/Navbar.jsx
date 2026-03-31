@@ -38,7 +38,7 @@ const Navbar = () => {
           <button onClick={() => navTo('/')} className="bg-transparent border-none cursor-pointer flex items-center gap-[9px]">
             <Clapperboard className="text-gold" size={24} />
             <span className="font-serif text-[18px] text-main font-bold mt-1">
-              Move<span className="gold-text">³</span>Movie
+              movemovemovie
             </span>
           </button>
           

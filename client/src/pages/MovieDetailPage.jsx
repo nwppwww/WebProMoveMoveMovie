@@ -28,7 +28,7 @@ const MovieDetailPage = () => {
             releaseYear: m.releaseyear || m.release_year
           };
           setMovie(normalized);
-          document.title = `Move³Movie | ${normalized.title || 'หนัง'}`;
+          document.title = `movemovemovie | ${normalized.title || 'หนัง'}`;
 
           // Normalize scenes (movieid -> movieId, locationid -> locationId)
           const normScenes = sRes.data.map(s => ({
@@ -47,7 +47,7 @@ const MovieDetailPage = () => {
     };
 
     fetchData();
-    return () => { document.title = 'Move³Movie'; };
+    return () => { document.title = 'movemovemovie'; };
   }, [id]);
 
   if (loading) {

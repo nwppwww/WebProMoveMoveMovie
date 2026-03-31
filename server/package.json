@@ -1,7 +1,7 @@
 {
   "name": "movemovemovie-server",
   "version": "1.0.0",
-  "description": "Move³Movie API Server — Thai Film Location Finder",
+  "description": "movemovemovie API Server — Thai Film Location Finder",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

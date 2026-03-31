@@ -28,7 +28,7 @@ function App() {
   if (!dbReady) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-bg relative px-6">
-        <h2 className="font-serif gold-text text-[42px] mb-6">Move³Movie</h2>
+        <h2 className="font-serif gold-text text-[42px] mb-6">movemovemovie</h2>
         <Shimmer w={200} h={4} className="rounded" />
       </div>
     );

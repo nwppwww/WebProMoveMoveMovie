@@ -24,7 +24,7 @@ app.use('/api/reviews', reviewRoutes)
 // Health check
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
-  message: '🎬 Move³Movie API is running!',
+  message: '🎬 movemovemovie API is running!',
   timestamp: new Date().toISOString()
 }))
 
@@ -47,7 +47,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
-  console.log(`\n🎬 Move³Movie Server`)
+  console.log(`\n🎬 movemovemovie Server`)
   console.log(`✅ Running on http://localhost:${PORT}`)
   console.log(`📡 API: http://localhost:${PORT}/api/health\n`)
 })

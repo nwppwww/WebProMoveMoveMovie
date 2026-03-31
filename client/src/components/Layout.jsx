@@ -21,15 +21,13 @@ const Layout = ({ children }) => {
       
       <footer className="bg-[#0A0A14] border-t border-white/5 px-6 pt-11 pb-9 text-center mt-auto">
         <div className="font-serif text-[22px] mb-2.5">
-          Move<span className="gold-text">³</span>Movie
+          movemovemovie
         </div>
         <p className="text-muted text-[13px] m-0 mb-2">
           ระบบแนะนำสถานที่ถ่ายทำ ตามรอยภาพยนตร์ไทย
         </p>
         <div className="w-20 h-px bg-gold/20 mx-auto my-4" />
-        <p className="text-[#3A3A4A] text-[11px] m-0">
-          KMITL · Software Analysis &amp; Design · 05506113 · ปีการศึกษา 2/2568
-        </p>
+
       </footer>
       
       <ScrollToTop />
