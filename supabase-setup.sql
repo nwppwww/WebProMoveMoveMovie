@@ -45,6 +45,7 @@ CREATE TABLE locations (
   type TEXT,
   lat FLOAT,
   lng FLOAT,
+  imgUrl TEXT,
   hidden BOOLEAN DEFAULT false,
   createdAt TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -81,6 +82,7 @@ CREATE TABLE ads (
   partnerId BIGINT REFERENCES users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
+  movieId BIGINT REFERENCES movies(id) ON DELETE CASCADE,
   lat FLOAT,
   lng FLOAT,
   pointsrequired INT DEFAULT 0,

@@ -117,7 +117,7 @@ const HomePage = () => {
         <div className="flex justify-between items-center mb-7">
           <h2 className="font-serif text-[26px] m-0">ภาพยนตร์<span className="gold-text">ยอดฮิต</span></h2>
           <button onClick={() => navigate('/movies')} className="btn-ghost flex items-center gap-1.5 rounded-[20px] px-4 py-1.5 text-[13px]">
-            ดูทั้งหมด ({allMovies.length}) <ChevronRight size={14} />
+            ดูทั้งหมด <ChevronRight size={14} />
           </button>
         </div>
 

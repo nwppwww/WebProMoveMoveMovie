@@ -115,7 +115,8 @@ const PartnerPage = () => {
     setFormData({
       ...formData,
       lat: loc.lat,
-      lng: loc.lng
+      lng: loc.lng,
+      movieId: loc.movieId || formData.movieId
     });
     setLocSearch(`${loc.name} (${loc.movieTitle})`);
     setShowLocDropdown(false);
@@ -343,6 +344,21 @@ const PartnerPage = () => {
           <div className="flex gap-4 mt-4 max-md:flex-col">
              <Field label="ละติจูดเป้าหมาย"><input type="number" step="0.0001" value={formData.lat || ''} onChange={e => setFormData({ ...formData, lat: parseFloat(e.target.value) })} className="inp" /></Field>
              <Field label="ลองจิจูดเป้าหมาย"><input type="number" step="0.0001" value={formData.lng || ''} onChange={e => setFormData({ ...formData, lng: parseFloat(e.target.value) })} className="inp" /></Field>
+          </div>
+
+          <div className="mt-4">
+             <Field label="ภาพยนตร์ที่ร่วมรายการ (ใช้ในการคัดกรองตั๋ว)">
+               <select 
+                 value={formData.movieId || ''} 
+                 onChange={e => setFormData({ ...formData, movieId: parseInt(e.target.value) || null })}
+                 className="inp"
+               >
+                 <option value="">-- เลือกภาพยนตร์ --</option>
+                 {allMovies.map(m => (
+                   <option key={m.id} value={m.id}>{m.title}</option>
+                 ))}
+               </select>
+             </Field>
           </div>
 
           <div className="mt-4">
