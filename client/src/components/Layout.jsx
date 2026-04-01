@@ -1,11 +1,15 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
-import { ScrollToTop, ToastMsg, ConfirmDialog } from './UI';
+import { ScrollToTop, ToastMsg, ConfirmDialog, GlobalLoader, ErrorBanner } from './UI';
 import { useAppContext } from '../context/AppContext';
 
 const Layout = ({ children }) => {
-  const { toastData, setToastData, confirmData, setConfirmData } = useAppContext();
+  const { 
+    toastData, setToastData, 
+    confirmData, setConfirmData,
+    globalLoading, globalError, setGlobalError
+  } = useAppContext();
   const location = useLocation();
 
   useEffect(() => {
@@ -27,7 +31,6 @@ const Layout = ({ children }) => {
           ระบบแนะนำสถานที่ถ่ายทำ ตามรอยภาพยนตร์ไทย
         </p>
         <div className="w-20 h-px bg-gold/20 mx-auto my-4" />
-
       </footer>
       
       <ScrollToTop />
@@ -45,6 +48,17 @@ const Layout = ({ children }) => {
         data={confirmData}
         onConfirm={() => confirmData?.onConfirm?.()}
         onCancel={() => setConfirmData(null)}
+      />
+
+      {globalLoading && <GlobalLoader />}
+
+      <ErrorBanner 
+        msg={globalError} 
+        onClose={() => setGlobalError(null)} 
+        onRetry={() => {
+          setGlobalError(null);
+          window.location.reload();
+        }}
       />
     </>
   );

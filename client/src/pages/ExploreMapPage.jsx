@@ -9,7 +9,7 @@ import { Shimmer } from '../components/UI';
 
 const ExploreMapPage = () => {
   const navigate = useNavigate();
-  const { user, toast } = useAppContext();
+  const { user, toast, setGlobalError } = useAppContext();
   const [locs, setLocs] = useState([]);
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +32,7 @@ const ExploreMapPage = () => {
         setMovies(movieRes.data);
       } catch (err) {
         console.error('API Fetch Error:', err);
+        setGlobalError(err.message || 'ไม่สามารถโหลดข้อมูลสถานที่บนแผนที่ได้ กรุณาลองใหม่อีกครั้ง');
       } finally {
         setLoading(false);
       }

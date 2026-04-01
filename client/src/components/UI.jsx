@@ -72,14 +72,14 @@ export const LeafletMap = ({ locations = [], center, zoom = 13, height = 350, on
       if (!loc.lat || !loc.lng) return;
       const marker = L.marker([loc.lat, loc.lng], { icon: goldIcon }).addTo(map);
       marker.bindPopup(`
-        <div style="padding:10px;font-family:DM Sans,sans-serif;min-width:180px;">
-          <strong style="color:#E8A020;font-size:15px;display:block;margin-bottom:4px;">${loc.name || loc.locationName}</strong>
-          <span style="color:#7A7990;font-size:13px;display:block;margin-bottom:12px;">📍 ${loc.province || ''}</span>
-          ${loc.description ? `<p style="color:#A8A5B4;font-size:13px;margin:0 0 12px;line-height:1.5;max-height:80px;overflow:hidden;">${loc.description.substring(0,80)}...</p>` : ''}
+        <div class="popup-container">
+          <strong class="popup-title">${loc.name || loc.locationName}</strong>
+          <span class="popup-sub">📍 ${loc.province || ''}</span>
+          ${loc.description ? `<p class="popup-desc">${loc.description.substring(0, 80)}...</p>` : ''}
           <a 
             href="https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}" 
             target="_blank" 
-            style="display:inline-block;padding:8px 14px;background:rgba(232,160,32,.15);color:#E8A020;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;width:100%;text-align:center;box-sizing:border-box;border:1px solid rgba(232,160,32,.3);"
+            class="popup-link"
           >📍 นำทางด้วย Google Maps</a>
         </div>
       `, { className: 'map-popup', maxWidth: 300 });
@@ -223,50 +223,46 @@ export const MapPicker = ({ lat, lng, onPick, height = 280 }) => {
   }, []);
 
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div className="mb-4">
       <Label>ค้นหาและปักหมุดสถานที่:</Label>
-      <div style={{ position: 'relative', marginBottom: 8 }}>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <div className="relative mb-2">
+        <div className="flex gap-2">
           <input 
             type="text" 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
             placeholder="เช่น KMITL, Central World..." 
-            className="inp"
-            style={{ flex: 1 }}
+            className="inp flex-1"
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
           />
           <button 
             type="button" 
             onClick={handleSearch} 
             disabled={searching}
-            className="btn-gold" 
-            style={{ padding: '0 16px', borderRadius: 10, flexShrink: 0, fontSize: 13 }}
+            className="btn-gold px-4 rounded-xl shrink-0 text-sm"
           >
             {searching ? 'รอ...' : 'ค้นหา'}
           </button>
         </div>
 
         {results.length > 0 && (
-          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1A1A24', border: '1px solid rgba(255,255,255,.1)', borderRadius: 12, marginTop: 4, zIndex: 1000, boxShadow: '0 10px 30px rgba(0,0,0,.5)', overflow: 'hidden' }}>
+          <div className="absolute top-full left-0 right-0 bg-[#1A1A24] border border-white/10 rounded-xl mt-1 z-[1000] shadow-2xl overflow-hidden">
             {results.map((r, i) => (
               <div 
                 key={i} 
                 onClick={() => selectPlace(r)}
-                style={{ padding: '12px 16px', borderBottom: i < results.length - 1 ? '1px solid rgba(255,255,255,.05)' : 'none', cursor: 'pointer', transition: 'background .2s' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(232,160,32,0.1)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                className="p-3 border-b border-white/5 cursor-pointer transition-colors hover:bg-gold/10"
               >
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', marginBottom: 2 }}>{r.display_name.split(',')[0]}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.display_name}</div>
+                <div className="text-[13px] font-bold text-white mb-0.5">{r.display_name.split(',')[0]}</div>
+                <div className="text-[11px] text-muted truncate">{r.display_name}</div>
               </div>
             ))}
           </div>
         )}
       </div>
       
-      <div ref={pickerMapRef} style={{ height, borderRadius: 12, border: '1px solid rgba(255,255,255,.1)', marginBottom: 8, cursor: 'crosshair' }} />
-      <div style={{ fontSize: 11, color: 'var(--color-gold)', textAlign: 'center', opacity: 0.8 }}>
+      <div ref={pickerMapRef} className="rounded-xl border border-white/10" style={{ height, cursor: 'crosshair' }} />
+      <div className="text-[11px] text-gold mt-2 text-center opacity-80">
          👆 เลือกผลการค้นหา หรือคลิกบนแผนที่เพื่อระบุจังหวัดอัตโนมัติ
       </div>
     </div>
@@ -406,5 +402,47 @@ export const Field = ({ label, children }) => (
   <div style={{ marginBottom:16 }}>
     {label && <Label>{label}</Label>}
     {children}
+  </div>
+);
+
+export const ErrorBanner = ({ msg, onRetry, onClose }) => {
+  if (!msg) return null;
+  return (
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] w-[90%] max-w-[600px] animate-fadeDown">
+      <div className="bg-[#1C1111] border border-red-500/30 rounded-2xl p-5 flex items-start gap-4 shadow-2xl backdrop-blur-md">
+        <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0">
+          <XCircle size={24} className="text-red-500" />
+        </div>
+        <div className="flex-1 pt-0.5">
+          <h4 className="font-bold text-red-100 mb-1">เกิดข้อผิดพลาดในการดึงข้อมูล</h4>
+          <p className="text-red-200/70 text-[14px] leading-relaxed mb-4">{msg}</p>
+          <div className="flex gap-3">
+            {onRetry && (
+              <button 
+                onClick={onRetry} 
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-all"
+              >
+                ลองใหม่อีกครั้ง
+              </button>
+            )}
+            <button 
+              onClick={onClose} 
+              className="bg-white/10 hover:bg-white/20 text-white/80 px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
+            >
+              ปิด
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const GlobalLoader = () => (
+  <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-[#07070F]/60 backdrop-blur-sm animate-fadeIn">
+    <div className="flex flex-col items-center">
+      <div className="w-12 h-12 border-4 border-gold/20 border-t-gold rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(232,160,32,0.3)]"></div>
+      <div className="font-serif gold-text text-xl animate-pulse tracking-widest">LOADING...</div>
+    </div>
   </div>
 );

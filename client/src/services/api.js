@@ -1,15 +1,13 @@
 import axios from 'axios'
 
-// ─── Supabase Direct REST API (Fulfills Axios/Fetch Rubric) ────────
-const SB_URL = 'https://dbxerewphusfequsqthz.supabase.co/rest/v1';
-const SB_KEY = 'sb_publishable_8hLBy1wLAbZQ-jeHrac-ag_FNg32_LK';
+// ─── Backend Proxy for Supabase REST API (Secured) ────────
+const PROXY_URL = '/api/supabase/rest/v1';
 
 const sbApi = axios.create({
-  baseURL: SB_URL,
+  baseURL: PROXY_URL,
   headers: { 
-    'Content-Type': 'application/json',
-    'apikey': SB_KEY,
-    'Authorization': `Bearer ${SB_KEY}`
+    'Content-Type': 'application/json'
+    // Apikey and Authorization are injected by the backend proxy securely
   },
 })
 

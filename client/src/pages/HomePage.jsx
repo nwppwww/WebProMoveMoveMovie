@@ -9,7 +9,7 @@ import { Shimmer } from '../components/UI';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { user, toast } = useAppContext();
+  const { user, toast, setGlobalError } = useAppContext();
   const [q, setQ] = useState('');
   const [popMovies, setPopMovies] = useState([]);
   const [popLocations, setPopLocations] = useState([]);
@@ -40,6 +40,7 @@ const HomePage = () => {
         setPopLocations((lRes.data || []).slice(0, 6)); // Top 6 locations
       } catch (err) {
         console.error('Fetch error:', err);
+        setGlobalError('ไม่สามารถโหลดข้อมูลหน้าแรกได้ กรุณาลองใหม่อีกครั้ง');
       } finally {
         setLoading(false);
       }

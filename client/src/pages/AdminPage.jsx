@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Trash2, Edit2, Plus, Users, Film, MapPin, LayoutDashboard, Megaphone, LogIn, Shield, Ticket, Check, Search } from 'lucide-react';
+import { Plus, Users, Film, MapPin, LayoutDashboard, Ticket, Check, Search } from 'lucide-react';
 import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { UserDB, MovieController, LocationController, AdController, TicketController, supabase } from '../services/db';
 import { Navigate, useNavigate } from 'react-router-dom';
+
+// Sub-components
+import MoviesTab from './admin/MoviesTab';
+import LocationsTab from './admin/LocationsTab';
+import AdsTab from './admin/AdsTab';
+import TicketsTab from './admin/TicketsTab';
+import UsersTab from './admin/UsersTab';
 
 const AdminPage = () => {
   const { user, toast, confirm, impersonate } = useAppContext();
@@ -157,207 +164,56 @@ const AdminPage = () => {
           ))}
         </div>
 
-        {/* MOVIES TAB */}
         {tab === 'movies' && (
-          <div>
-            <div className="flex justify-end mb-4">
-              <button onClick={() => handleCreate('movies')} className="btn-gold flex items-center gap-1.5 py-2 px-4 rounded-lg text-sm">
-                <Plus size={16} /> เพิ่มภาพยนตร์
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table>
-                <thead><tr><th>ID</th><th>ชื่อเรื่อง</th><th>ปีที่ฉาย</th><th>หมวดหมู่</th><th>จัดการ</th></tr></thead>
-                <tbody>
-                  {movies.map(m => (
-                    <tr key={m.id}>
-                      <td>{m.id}</td>
-                      <td>{m.title}</td>
-                      <td>{m.releaseYear}</td>
-                      <td>{m.genre}</td>
-                      <td>
-                        <button onClick={() => handleEdit(m, 'movies')} className="btn-ghost p-1.5 rounded-md mr-2"><Edit2 size={14} /></button>
-                        <button onClick={() => handleDelete(m.id, MovieController, 'ภาพยนตร์', m.title)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <MoviesTab 
+            movies={movies} 
+            onEdit={(m) => handleEdit(m, 'movies')} 
+            onCreate={() => handleCreate('movies')} 
+            onDelete={handleDelete} 
+          />
         )}
 
-        {/* LOCATIONS TAB */}
         {tab === 'locations' && (
-          <div>
-            <div className="flex justify-end mb-4">
-              <button onClick={() => handleCreate('locations')} className="btn-gold flex items-center gap-1.5 py-2 px-4 rounded-lg text-sm">
-                <Plus size={16} /> เพิ่มสถานที่
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table>
-                <thead><tr><th>ID</th><th>ชื่อสถานที่</th><th>ภาพยนตร์</th><th>จังหวัด</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
-                <tbody>
-                  {locations.map(l => (
-                    <tr key={l.id}>
-                      <td>{l.id}</td>
-                      <td>{l.name}</td>
-                      <td className="text-gold font-medium">{movies.find(m => m.id === l.movieId)?.title || '-'}</td>
-                      <td>{l.province}</td>
-                      <td>{l.hidden ? <span className="text-muted"><EyeOff size={14} className="inline mr-1" /> ซ่อน</span> : <span className="text-gold"><Eye size={14} className="inline mr-1" /> แสดง</span>}</td>
-                      <td>
-                        <button onClick={() => handleToggleVis(l.id, LocationController)} className="btn-ghost p-1.5 rounded-md mr-2">{l.hidden ? <Eye size={14} /> : <EyeOff size={14} />}</button>
-                        <button onClick={() => handleEdit(l, 'locations')} className="btn-ghost p-1.5 rounded-md mr-2"><Edit2 size={14} /></button>
-                        <button onClick={() => handleDelete(l.id, LocationController, 'สถานที่', l.name)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <LocationsTab 
+            locations={locations} 
+            movies={movies} 
+            onEdit={(l) => handleEdit(l, 'locations')} 
+            onCreate={() => handleCreate('locations')} 
+            onDelete={handleDelete} 
+            onToggleVis={handleToggleVis} 
+          />
         )}
 
-        {/* ADS TAB */}
         {tab === 'ads' && (
-          <div>
-            <h3 className="font-serif mb-4 text-[20px]">อนุมัติตั๋วสิทธิพิเศษจาก Partner</h3>
-            <div className="overflow-x-auto">
-              <table>
-                <thead><tr><th>ID</th><th>หัวข้อ</th><th>ชื่อ Partner</th><th>แต้มที่ใช้แลก</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
-                <tbody>
-                  {ads.map(a => {
-                    const partner = users.find(u => u.id === a.partnerId);
-                    return (
-                      <tr key={a.id}>
-                        <td>{a.id}</td>
-                        <td>{a.title}</td>
-                        <td>{partner ? partner.name : 'Unknown Partner'}</td>
-                        <td className="text-gold font-medium">{a.pointsRequired > 0 ? `${a.pointsRequired} แต้ม` : '-'}</td>
-                        <td>
-                          {a.hidden ? 
-                            <span className="text-muted bg-white/5 px-2 py-0.5 rounded-full text-xs">รออนุมัติ / ซ่อน</span> : 
-                            <span className="text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full text-xs">อนุมัติแล้ว / แสดง</span>
-                          }
-                        </td>
-                        <td>
-                          <button onClick={() => handleToggleVis(a.id, AdController)} className="btn-ghost py-1.5 px-3 rounded-md mr-2 text-[13px] inline-flex items-center gap-1.5">
-                            {a.hidden ? <Eye size={14} /> : <EyeOff size={14} />} 
-                            {a.hidden ? 'อนุมัติ (แสดงผล)' : 'ระงับ (ซ่อน)'}
-                          </button>
-                          <button onClick={() => handleDelete(a.id, AdController, 'ตั๋วสิทธิพิเศษ', a.title)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
-                        </td>
-                      </tr>
-                  )})}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <AdsTab 
+            ads={ads} 
+            users={users} 
+            onToggleVis={handleToggleVis} 
+            onDelete={handleDelete} 
+          />
         )}
 
-        {/* TICKETS TAB */}
         {tab === 'tickets' && (
-          <div>
-            <div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-stretch gap-4">
-              <h3 className="font-serif text-[20px] m-0">ประวัติตั๋วและสิทธิ์พิเศษที่ถูกผู้ใช้แลกไป</h3>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  value={ticketSearch} 
-                  onChange={e => setTicketSearch(e.target.value)} 
-                  placeholder="ค้นหาด้วยรหัสตั๋ว เช่น MMM-..." 
-                  className="inp w-[300px] max-md:w-full"
-                  style={{ paddingLeft: '40px' }}
-                />
-                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table>
-                <thead><tr><th>ID</th><th>รหัสตั๋ว</th><th>ชื่อตั๋ว (สิทธิพิเศษ)</th><th>ผู้ใช้</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
-                <tbody>
-                  {filteredTickets.map(t => {
-                    const ad = ads.find(a => a.id === t.adId || a.id === t.adid);
-                    const usr = users.find(u => u.id === t.userId || u.id === t.userid);
-                    return (
-                      <tr key={t.id}>
-                        <td>{t.id}</td>
-                        <td className="font-mono text-gold font-bold tracking-wider">{t.ticketCode}</td>
-                        <td>{ad?.title || 'Unknown Ad'}</td>
-                        <td>{usr ? `${usr.name}` : 'Unknown'}</td>
-                        <td className={t.used ? 'text-red-400 font-medium' : 'text-green-400 font-medium'}>{t.used ? 'ใช้สิทธิ์แล้ว' : 'พร้อมใช้งาน'}</td>
-                        <td>
-                          <button onClick={async () => {
-                            await TicketController.markUsed(t.id, !t.used);
-                            refresh();
-                            toast(`เปลี่ยนสถานะตั๋ว ${t.ticketCode} สำเร็จ`);
-                          }} className="btn-ghost py-1.5 px-3 rounded-md mr-2 text-[13px] border border-white/20">
-                            {t.used ? 'รีเซ็ตเป็น "พร้อมใช้"' : 'ใช้งานตั๋วนี้'}
-                          </button>
-                          <button onClick={() => handleDelete(t.id, TicketController, 'ตั๋ว', t.ticketCode)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                  {filteredTickets.length === 0 && (
-                    <tr>
-                      <td colSpan="6" className="text-center py-8 text-muted">ไม่พบข้อมูลตั๋วที่ค้นหา</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <TicketsTab 
+            filteredTickets={filteredTickets} 
+            ads={ads} 
+            users={users} 
+            ticketSearch={ticketSearch} 
+            setTicketSearch={setTicketSearch} 
+            onRefresh={refresh} 
+            onToast={toast} 
+            onDelete={handleDelete} 
+          />
         )}
 
-        {/* USERS TAB */}
         {tab === 'users' && (
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <div className="text-muted text-[13px]">
-                รวม {users.length} บัญชี · สามารถแก้ไขข้อมูลและเข้าสู่ระบบแทนได้
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table>
-                <thead><tr><th>ID</th><th>ชื่อ</th><th>อีเมล</th><th>บทบาท</th><th>วันที่สมัคร</th><th>จัดการ</th></tr></thead>
-                <tbody>
-                  {users.map(u => (
-                    <tr key={u.id}>
-                      <td className="text-muted text-[12px]">{u.id}</td>
-                      <td className="font-medium">{u.name}</td>
-                      <td className="text-muted">{u.email}</td>
-                      <td><span className={u.role === 'admin' ? 'badge badge-green' : u.role === 'partner' ? 'badge' : 'badge badge-gray'}>{u.role}</span></td>
-                      <td className="text-muted text-[12px]">{u.createdAt ? new Date(u.createdAt).toLocaleDateString('th-TH') : '-'}</td>
-                      <td>
-                        <div className="flex gap-1.5 flex-wrap">
-                          <button onClick={() => handleEditUser(u)} className="btn-ghost px-2.5 py-1 rounded-md text-[12px] flex items-center gap-1" title="แก้ไขข้อมูล">
-                            <Edit2 size={13} /> แก้ไข
-                          </button>
-                          {u.id !== user.id && (
-                            <button onClick={() => handleImpersonate(u)} className="btn-ghost px-2.5 py-1 rounded-md text-[12px] flex items-center gap-1 border-gold/30 text-gold" title="เข้าสู่ระบบแทน">
-                              <LogIn size={13} /> Login แทน
-                            </button>
-                          )}
-                          {u.id !== user.id && u.role !== 'admin' && (
-                            <button onClick={() => handleDeleteUser(u)} className="btn-danger p-1 rounded-md" title="ลบบัญชี">
-                              <Trash2 size={13} />
-                            </button>
-                          )}
-                          {u.id === user.id && (
-                            <span className="text-muted text-[11px] px-2 py-1 flex items-center gap-1">
-                              <Shield size={12} />คุณ
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <UsersTab 
+            users={users} 
+            currentUser={user} 
+            onEditUser={handleEditUser} 
+            onImpersonate={handleImpersonate} 
+            onDeleteUser={handleDeleteUser} 
+          />
         )}
       </div>
 

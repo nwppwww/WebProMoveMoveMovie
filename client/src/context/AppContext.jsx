@@ -11,6 +11,8 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : null;
   });
   
+  const [globalLoading, setGlobalLoading] = useState(false);
+  const [globalError, setGlobalError] = useState(null);
   const [toastData, setToastData] = useState(null);
   const [confirmData, setConfirmData] = useState(null); // { msg, onConfirm, onCancel, type }
   const navigate = useNavigate();
@@ -51,7 +53,8 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{ 
       user, login, logout, toast, toastData, setToastData, 
-      confirm, confirmData, setConfirmData, impersonate, updateUser 
+      confirm, confirmData, setConfirmData, impersonate, updateUser,
+      globalLoading, setGlobalLoading, globalError, setGlobalError
     }}>
       {children}
     </AppContext.Provider>
