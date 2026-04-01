@@ -2,7 +2,7 @@ import React from 'react';
 import { User, Gift, Clock, Star, Edit2, Check, X, Heart, MapPin, CheckCircle, Ticket } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { PointController, UserDB, FavoriteController, CheckInController, TicketController, AdController } from '../services/db';
+import { PointController, UserDB, FavoriteController, CheckInController, TicketController, AdController, MovieController } from '../services/db';
 
 const ProfilePage = () => {
   const { user, toast, updateUser } = useAppContext();
