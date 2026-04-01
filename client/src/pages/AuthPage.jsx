@@ -48,7 +48,7 @@ const AuthPage = () => {
       <div className="animate-fade-up bg-card border border-white/10 rounded-3xl p-10 w-full max-w-[420px] max-md:p-8 shrink-0">
         
         <div className="text-center mb-8">
-          <h1 className="font-serif text-[32px] m-0 mb-2">Move<span className="gold-text">³</span>Movie</h1>
+          <h1 className="font-serif text-[32px] m-0 mb-2">Move<span className="gold-text">Move</span>Movie</h1>
           <p className="text-muted text-[14px]">ระบบแนะนำสถานที่ถ่ายทำตามรอยภาพยนตร์</p>
         </div>
 
