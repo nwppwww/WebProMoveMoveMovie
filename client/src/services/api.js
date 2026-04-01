@@ -1,13 +1,14 @@
 import axios from 'axios'
 
-// ─── Backend Proxy for Supabase REST API (Secured) ────────
-const PROXY_URL = '/api/supabase/rest/v1';
+const SUPABASE_URL = 'https://dbxerewphusfequsqthz.supabase.co/rest/v1';
+const SUPABASE_KEY = 'sb_publishable_8hLBy1wLAbZQ-jeHrac-ag_FNg32_LK';
 
 const sbApi = axios.create({
-  baseURL: PROXY_URL,
+  baseURL: SUPABASE_URL,
   headers: { 
-    'Content-Type': 'application/json'
-    // Apikey and Authorization are injected by the backend proxy securely
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`
   },
 })
 
