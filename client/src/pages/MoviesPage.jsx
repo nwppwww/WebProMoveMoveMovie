@@ -13,8 +13,10 @@ const MoviesPage = () => {
   const [q, setQ] = useState(initQ);
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    setError(null);
     setLoading(true);
     
     // Using Axios to fetch our own data (Supabase) to fulfill Rubric requirement
@@ -31,6 +33,7 @@ const MoviesPage = () => {
         setMovies(normalized);
       } catch (err) {
         console.error('Fetch error:', err);
+        setError('ไม่สามารถโหลดข้อมูลภาพยนตร์ได้ กรุณาลองใหม่อีกครั้ง');
       } finally {
         setLoading(false);
       }
@@ -55,6 +58,13 @@ const MoviesPage = () => {
         />
         <Search size={22} className="text-muted absolute left-5 top-1/2 -translate-y-1/2" />
       </form>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-5 py-4 rounded-2xl mb-6 flex items-center gap-3 text-[14px]">
+          <span>⚠️</span> {error}
+          <button onClick={() => { setError(null); setQ(q); }} className="ml-auto text-red-400 underline text-[13px] hover:text-red-300">ลองใหม่</button>
+        </div>
+      )}
 
       <div className="flex items-center gap-3 mb-7">
         <h2 className="font-serif text-[32px] m-0">ภาพยนตร์<span className="gold-text">ทั้งหมด</span></h2>

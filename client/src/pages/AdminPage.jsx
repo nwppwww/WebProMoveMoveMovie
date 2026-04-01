@@ -55,8 +55,8 @@ const AdminPage = () => {
     });
   };
 
-  const handleToggleVis = (id, controller) => {
-    controller.toggleVisibility(id);
+  const handleToggleVis = async (id, controller) => {
+    await controller.toggleVisibility(id);
     toast('เปลี่ยนสถานะการมองเห็นแล้ว');
     refresh();
   };
@@ -70,6 +70,9 @@ const AdminPage = () => {
       } else if (modalType === 'locations') {
         if (editingItem) await LocationController.update(editingItem.id, formData);
         else await LocationController.add(formData);
+      } else if (modalType === 'ads') {
+        if (editingItem) await AdController.update(editingItem.id, formData);
+        else await AdController.add(formData);
       }
       toast('บันทึกข้อมูลสำเร็จ');
       setModalType(null);
@@ -189,7 +192,8 @@ const AdminPage = () => {
             ads={ads} 
             users={users} 
             onToggleVis={handleToggleVis} 
-            onDelete={handleDelete} 
+            onDelete={handleDelete}
+            onCreate={() => handleCreate('ads')}
           />
         )}
 
@@ -226,6 +230,14 @@ const AdminPage = () => {
               <Field label="หมวดหมู่"><input required value={formData.genre || ''} onChange={e => setFormData({ ...formData, genre: e.target.value })} className="inp" /></Field>
               <Field label="URL โปสเตอร์"><input required value={formData.poster || ''} onChange={e => setFormData({ ...formData, poster: e.target.value })} className="inp" /></Field>
               <Field label="เรื่องย่อ"><textarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="inp" /></Field>
+            </>
+          )}
+
+          {modalType === 'ads' && (
+            <>
+              <Field label="หัวข้อ / ชื่อตั๋ว"><input required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} className="inp" placeholder="เช่น ส่วนลด 30% ร้าน AAA..." /></Field>
+              <Field label="รายละเอียด"><textarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="inp min-h-[80px]" /></Field>
+              <Field label="แต้มที่ใช้แลก (0 = ฟรี)"><input type="number" min="0" value={formData.pointsRequired ?? 0} onChange={e => setFormData({ ...formData, pointsRequired: parseInt(e.target.value) })} className="inp" /></Field>
             </>
           )}
 

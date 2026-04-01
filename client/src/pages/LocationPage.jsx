@@ -197,34 +197,16 @@ const LocationPage = () => {
                 onClick={handleToggleFavorite}
                 disabled={favToggling}
                 title={isFav ? 'นำออกจากสถานที่โปรด' : 'เพิ่มในสถานที่โปรด'}
-                style={{
-                  marginTop: '6px',
-                  background: isFav ? 'rgba(232,64,31,0.1)' : 'rgba(255,255,255,0.05)',
-                  border: isFav ? '1px solid rgba(232,64,31,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  padding: '10px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '7px',
-                  color: isFav ? '#e8401f' : '#888',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  transition: 'all 0.2s ease',
-                  transform: favToggling ? 'scale(0.92)' : 'scale(1)',
-                  opacity: favToggling ? 0.6 : 1,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
+                className={`mt-1.5 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-[13px] font-medium whitespace-nowrap shrink-0 transition-all duration-200 cursor-pointer
+                  ${isFav
+                    ? 'bg-red-500/10 border-red-500/30 text-red-500'
+                    : 'bg-white/5 border-white/10 text-[#888] hover:border-white/20'
+                  }
+                  ${favToggling ? 'scale-95 opacity-60' : 'scale-100 opacity-100'}`}
               >
                 <Heart
                   size={18}
-                  style={{
-                    fill: isFav ? '#e8401f' : 'none',
-                    stroke: isFav ? '#e8401f' : '#888',
-                    transition: 'all 0.2s ease',
-                    filter: isFav ? 'drop-shadow(0 0 4px rgba(232,64,31,0.5))' : 'none',
-                  }}
+                  className={`transition-all duration-200 ${isFav ? 'fill-red-500 stroke-red-500 drop-shadow-[0_0_4px_rgba(232,64,31,0.5)]' : 'fill-none stroke-[#888]'}`}
                 />
                 {isFav ? 'โปรดแล้ว' : 'เพิ่มในโปรด'}
               </button>

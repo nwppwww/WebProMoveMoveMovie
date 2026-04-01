@@ -222,8 +222,7 @@ const ProfilePage = () => {
           {favLocations.length > 0 ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
               {favLocations.map(l => (
-                <div key={l.id} className="bg-card border border-white/5 rounded-2xl p-5 flex flex-col gap-3"
-                  style={{ position: 'relative' }}>
+                <div key={l.id} className="relative bg-card border border-white/5 rounded-2xl p-5 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-3">
                     <div
                       className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
@@ -249,14 +248,9 @@ const ProfilePage = () => {
                           toast('เกิดข้อผิดพลาด: ' + err.message, 'error');
                         }
                       }}
-                      style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        padding: '6px', borderRadius: '8px', flexShrink: 0,
-                        display: 'flex', alignItems: 'center',
-                        color: '#e8401f', transition: 'opacity 0.2s'
-                      }}
+                      className="p-1.5 rounded-lg flex items-center shrink-0 text-red-500 hover:bg-red-500/10 transition-all duration-200 cursor-pointer bg-transparent border-none"
                     >
-                      <Heart size={18} style={{ fill: '#e8401f', stroke: '#e8401f' }} />
+                      <Heart size={18} className="fill-red-500 stroke-red-500" />
                     </button>
                   </div>
                   {l.description && (

@@ -1,11 +1,16 @@
 import React from 'react';
-import { Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Trash2, Plus } from 'lucide-react';
 import { AdController } from '../../services/db';
 
-const AdsTab = ({ ads, users, onToggleVis, onDelete }) => {
+const AdsTab = ({ ads, users, onToggleVis, onDelete, onCreate }) => {
   return (
     <div>
-      <h3 className="font-serif mb-4 text-[20px]">อนุมัติตั๋วสิทธิพิเศษจาก Partner</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-serif text-[20px] m-0">อนุมัติตั๋วสิทธิพิเศษจาก Partner</h3>
+        <button onClick={onCreate} className="btn-gold flex items-center gap-1.5 py-2 px-4 rounded-lg text-sm">
+          <Plus size={16} /> เพิ่มตั๋ว (Ad)
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table>
           <thead><tr><th>ID</th><th>หัวข้อ</th><th>ชื่อ Partner</th><th>แต้มที่ใช้แลก</th><th>สถานะ</th><th>จัดการ</th></tr></thead>

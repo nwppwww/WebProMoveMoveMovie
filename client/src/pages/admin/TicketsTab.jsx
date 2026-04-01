@@ -13,8 +13,7 @@ const TicketsTab = ({ filteredTickets, ads, users, ticketSearch, setTicketSearch
             value={ticketSearch} 
             onChange={e => setTicketSearch(e.target.value)} 
             placeholder="ค้นหาด้วยรหัสตั๋ว เช่น MMM-..." 
-            className="inp w-[300px] max-md:w-full"
-            style={{ paddingLeft: '40px' }}
+            className="inp pl-10 w-[300px] max-md:w-full"
           />
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
         </div>
