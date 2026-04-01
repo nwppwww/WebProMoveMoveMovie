@@ -23,7 +23,7 @@ const ProfilePage = () => {
   // ✅ ย้ายมาไว้ก่อน conditional return เพื่อให้ถูกต้องตาม Rules of Hooks
   const [formError, setFormError] = React.useState('');
   const ads = AdController.list();
-  
+
   const pts = PointController.get(user?.id);
 
   const fetchHistory = React.useCallback(async () => {
@@ -59,23 +59,23 @@ const ProfilePage = () => {
       setIsEditing(false);
       return;
     }
-    
+
     setLoading(true);
     try {
       const updated = await UserDB.updateName(user.id, newName.trim());
       updateUser(updated);
       toast('เปลี่ยนชื่อสำเร็จแล้ว! ประวัติการเปลี่ยนของคุณถูกบันทึกเรียบร้อย');
       setIsEditing(false);
-      fetchHistory(); 
+      fetchHistory();
     } catch (err) {
       console.error('Update name error:', err);
       let errMsg = err.message || 'บันทึกข้อมูลไม่สำเร็จ';
-      
+
       // Translate common Supabase/Postgres errors to Thai
       if (errMsg.includes('Permission denied')) errMsg = 'ไม่มีสิทธิ์บันทึกข้อมูล (กรุณาเช็คการตั้งค่า RLS ใน Supabase)';
       if (errMsg.includes('foreign key constraint')) errMsg = 'ไม่พบข้อมูลผู้ใช้ในระบบหลัก';
       if (errMsg.includes('network')) errMsg = 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (Network Error)';
-      
+
       setFormError(errMsg);
       toast(errMsg, 'error');
     } finally {
@@ -86,7 +86,7 @@ const ProfilePage = () => {
   return (
     <div className="max-w-[800px] mx-auto mt-[140px] mb-[100px] px-6">
       <div className="animate-fade-up">
-        
+
         <div className="flex items-center gap-6 mb-10 pb-10 border-b border-white/10 max-md:flex-col max-md:text-center max-md:gap-4 max-md:pb-6">
           <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-gold to-gold-dim text-[#07070F] flex items-center justify-center text-[40px] font-bold shrink-0 shadow-[0_0_30px_rgba(232,160,32,0.15)]">
             {user?.name?.charAt(0)?.toUpperCase() || '?'}
@@ -96,9 +96,9 @@ const ProfilePage = () => {
               {isEditing ? (
                 <div className="flex-1 max-w-[400px]">
                   <form onSubmit={handleUpdateName} className="flex items-center gap-2 animate-fade-in w-full">
-                    <input 
-                      className="inp py-2 px-4 text-[22px] font-serif flex-1 border-gold/50 shadow-[0_0_15px_rgba(232,160,32,0.1)] transition-all focus:border-gold" 
-                      value={newName} 
+                    <input
+                      className="inp py-2 px-4 text-[22px] font-serif flex-1 border-gold/50 shadow-[0_0_15px_rgba(232,160,32,0.1)] transition-all focus:border-gold"
+                      value={newName}
                       onChange={e => { setNewName(e.target.value); setFormError(''); }}
                       autoFocus
                       placeholder="ใส่ชื่อใหม่ของคุณ..."
@@ -201,10 +201,10 @@ const ProfilePage = () => {
                       <div className="text-[11px] text-muted mb-1 uppercase tracking-widest font-medium">รหัสการใช้สิทธิ์ของคุณ</div>
                       <div className="font-mono text-[22px] tracking-widest font-bold text-main py-1 px-4 bg-black/40 rounded-lg border border-gold/10 inline-block">{t.ticketCode}</div>
                       <div className="text-[11px] text-white/30 mt-3 flex items-center justify-between w-full">
-                         <span>ได้เมื่อ: {new Date(t.redeemedAt || t.createdAt).toLocaleDateString('th-TH')}</span>
-                         <span className={`${t.used ? 'text-red-400' : 'text-green-400'}`}>
-                           {t.used ? 'ใช้สิทธิ์แล้ว' : 'พร้อมใช้งาน'}
-                         </span>
+                        <span>ได้เมื่อ: {new Date(t.redeemedAt || t.createdAt).toLocaleDateString('th-TH')}</span>
+                        <span className={`${t.used ? 'text-red-400' : 'text-green-400'}`}>
+                          {t.used ? 'ใช้สิทธิ์แล้ว' : 'พร้อมใช้งาน'}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -265,7 +265,7 @@ const ProfilePage = () => {
             <div className="bg-card border border-dashed border-white/10 rounded-2xl p-10 text-center">
               <Heart size={40} className="text-white/10 mx-auto mb-3" />
               <div className="text-[15px] text-muted mb-1">ยังไม่มีสถานที่โปรด</div>
-              <div className="text-[13px] text-white/20 mb-5">กดไอคอนหัวใจที่การ์ดสถานที่เพื่อเพิ่มในโปรด</div>
+              <div className="text-[13px] text-white/20 mb-5">กดไอคอนหัวใจที่การ์ดสถานที่เพื่อเพิ่มในสถานที่โปรด</div>
               <button
                 onClick={() => navigate('/')}
                 className="btn-ghost px-5 py-2 rounded-xl text-[13px] inline-flex items-center gap-2"
@@ -316,7 +316,7 @@ const ProfilePage = () => {
             </div>
           )}
         </div>
-        
+
       </div>
     </div>
   );

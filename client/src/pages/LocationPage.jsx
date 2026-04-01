@@ -181,7 +181,7 @@ const LocationPage = () => {
       </button>
 
       <div className="animate-fade-up">
-        
+
         <div className="flex flex-col md:flex-row gap-10 mb-[60px]">
 
           <div className="flex-1">
@@ -208,7 +208,7 @@ const LocationPage = () => {
                   size={18}
                   className={`transition-all duration-200 ${isFav ? 'fill-red-500 stroke-red-500 drop-shadow-[0_0_4px_rgba(232,64,31,0.5)]' : 'fill-none stroke-[#888]'}`}
                 />
-                {isFav ? 'โปรดแล้ว' : 'เพิ่มในโปรด'}
+                {isFav ? 'เพิ่มในสถานที่โปรดแล้ว' : 'เพิ่มในสถานที่โปรด'}
               </button>
             </div>
             {loc.imgUrl && (
@@ -230,14 +230,14 @@ const LocationPage = () => {
                   >
                     <Map size={18} /> นำทางด้วย Google Maps
                   </a>
-                  
-                  <button 
+
+                  <button
                     onClick={handleCheckIn}
                     disabled={isCheckingIn || hasCheckedIn}
                     className={`inline-flex items-center gap-2.5 px-6 py-3 rounded-xl font-semibold text-[15px] transition-all 
-                                ${hasCheckedIn 
-                                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                                  : 'bg-[#1a1b26] text-white hover:bg-[#252736] border border-white/10'}`}
+                                ${hasCheckedIn
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-[#1a1b26] text-white hover:bg-[#252736] border border-white/10'}`}
                   >
                     {isCheckingIn ? (
                       <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
@@ -272,7 +272,7 @@ const LocationPage = () => {
           </div>
 
           <div className="w-full max-w-[320px] max-md:max-w-none">
-            
+
             {/* Related Movies */}
             <div className="bg-card border border-white/5 rounded-2xl p-6 mb-6">
               <h3 className="font-serif text-[18px] mb-4">ปรากฏในภาพยนตร์</h3>
@@ -314,7 +314,7 @@ const LocationPage = () => {
                 </div>
               )}
             </div>
-            
+
           </div>
         </div>
 
@@ -323,30 +323,30 @@ const LocationPage = () => {
           <h2 className="font-serif text-[24px] mb-6">รีวิวจากผู้ใช้งาน ({reviews.length})</h2>
           {reviews.length > 0 ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5">
-                {reviews.map(r => {
-                  const dateVal = r.createdAt || r.createdat;
-                  const nameVal = r.userName || r.username || 'ผู้ใช้แอป';
-                  
-                  return (
-                    <div key={r.id} className="bg-card border border-white/5 rounded-2xl p-5 md:p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gold/10 text-gold flex items-center justify-center font-semibold text-[14px]">
-                            {nameVal.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-[14px]">{nameVal}</div>
-                            <div className="text-[12px] text-muted">
-                              {dateVal ? new Date(dateVal).toLocaleDateString('th-TH') : 'เมื่อสักครู่'}
-                            </div>
+              {reviews.map(r => {
+                const dateVal = r.createdAt || r.createdat;
+                const nameVal = r.userName || r.username || 'ผู้ใช้แอป';
+
+                return (
+                  <div key={r.id} className="bg-card border border-white/5 rounded-2xl p-5 md:p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gold/10 text-gold flex items-center justify-center font-semibold text-[14px]">
+                          {nameVal.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-[14px]">{nameVal}</div>
+                          <div className="text-[12px] text-muted">
+                            {dateVal ? new Date(dateVal).toLocaleDateString('th-TH') : 'เมื่อสักครู่'}
                           </div>
                         </div>
-                        <Stars val={r.rating} size={14} readonly />
                       </div>
-                      <p className="text-[#EDE9E3] text-[14px] leading-[1.6] m-0">"{r.comment}"</p>
+                      <Stars val={r.rating} size={14} readonly />
                     </div>
-                  );
-                })}
+                    <p className="text-[#EDE9E3] text-[14px] leading-[1.6] m-0">"{r.comment}"</p>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="p-10 text-center bg-card rounded-2xl border border-dashed border-white/10">
@@ -356,7 +356,7 @@ const LocationPage = () => {
             </div>
           )}
         </div>
-        
+
       </div>
     </div>
   );
