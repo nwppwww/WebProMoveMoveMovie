@@ -11,6 +11,7 @@ const MovieDetailPage = () => {
   const [movie, setMovie] = useState(null);
   const [scenes, setScenes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,6 +42,7 @@ const MovieDetailPage = () => {
         }
       } catch (err) {
         console.error('Fetch error:', err);
+        setError('ไม่สามารถโหลดข้อมูลภาพยนตร์ได้ กรุณาลองใหม่อีกครั้ง');
       } finally {
         setLoading(false);
       }
@@ -57,6 +59,24 @@ const MovieDetailPage = () => {
         <Shimmer h={40} w="60%" style={{ marginBottom: 16 }} />
         <Shimmer h={20} w="80%" style={{ marginBottom: 8 }} />
         <Shimmer h={20} w="75%" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-[120px] px-5">
+        <div className="text-red-400 text-[48px] mb-4">⚠️</div>
+        <h2 className="font-serif text-[24px] text-red-400 mb-2">เกิดข้อผิดพลาด</h2>
+        <p className="text-muted mb-6">{error}</p>
+        <div className="flex gap-3 justify-center">
+          <button className="btn-gold px-6 py-2.5 rounded-xl text-[14px]" onClick={() => { setError(null); setLoading(true); }}>
+            ลองใหม่อีกครั้ง
+          </button>
+          <button className="btn-ghost px-6 py-2.5 rounded-[20px] inline-flex items-center gap-2" onClick={() => navigate('/movies')}>
+            <ArrowLeft size={16} /> กลับไปหน้าภาพยนตร์
+          </button>
+        </div>
       </div>
     );
   }

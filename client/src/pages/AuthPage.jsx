@@ -18,11 +18,16 @@ const AuthPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const u = await AuthController.login(email, pass);
-    if (!u) return setErr('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
-    login(u);
-    toast('เข้าสู่ระบบสำเร็จ');
-    navigate('/');
+    setErr('');
+    try {
+      const u = await AuthController.login(email, pass);
+      if (!u) return setErr('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+      login(u);
+      toast('เข้าสู่ระบบสำเร็จ');
+      navigate('/');
+    } catch (ex) {
+      setErr(ex.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+    }
   };
 
   const handleRegister = async (e) => {

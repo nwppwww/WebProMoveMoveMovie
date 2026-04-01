@@ -20,6 +20,8 @@ const ProfilePage = () => {
   const [tickets] = React.useState(() =>
     user ? TicketController.getUserTickets(user.id) : []
   );
+  // ✅ ย้ายมาไว้ก่อน conditional return เพื่อให้ถูกต้องตาม Rules of Hooks
+  const [formError, setFormError] = React.useState('');
   const ads = AdController.list();
   
   const pts = PointController.get(user?.id);
@@ -44,8 +46,6 @@ const ProfilePage = () => {
   }, [user?.name]);
 
   if (!user) return <Navigate to="/auth" replace />;
-
-  const [formError, setFormError] = React.useState('');
 
   const handleUpdateName = async (e) => {
     if (e) e.preventDefault();
