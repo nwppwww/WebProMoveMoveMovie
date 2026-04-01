@@ -133,7 +133,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .popup-title { @apply text-gold font-bold text-[16px] block mb-1; }
 .popup-sub { @apply text-muted text-[13px] block mb-3; }
 .popup-desc { @apply text-white/70 text-[13px] m-0 mb-3 leading-relaxed max-h-[80px] overflow-hidden; }
-.popup-link { @apply flex items-center justify-center gap-2 py-2.5 px-4 bg-gold/15 text-gold border border-gold/30 rounded-lg text-[13px] font-bold transition-all hover:bg-gold/25 no-underline !important; }
+.popup-link { @apply flex items-center justify-center gap-2 py-2.5 px-4 bg-gold/15 text-gold border border-gold/30 rounded-lg text-[13px] font-bold transition-all hover:bg-gold/25 !no-underline; }
 
 /* 🌟 Particle & Animations */
 .particles { @apply fixed inset-0 pointer-events-none z-0 overflow-hidden; }
