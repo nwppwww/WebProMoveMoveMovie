@@ -1,9 +1,7 @@
-import React from 'react';
+﻿import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Layout from './components/Layout';
-
-// Pages
 import HomePage from './pages/HomePage';
 import MoviesPage from './pages/MoviesPage';
 import MovieDetailPage from './pages/MovieDetailPage';
@@ -14,17 +12,13 @@ import ProfilePage from './pages/ProfilePage';
 import RewardsPage from './pages/RewardsPage';
 import AdminPage from './pages/AdminPage';
 import PartnerPage from './pages/PartnerPage';
-
 import { initDB } from './services/db';
 import { Shimmer } from './components/UI';
-
 function App() {
   const [dbReady, setDbReady] = React.useState(false);
-
   React.useEffect(() => {
     initDB().finally(() => setDbReady(true));
   }, []);
-
   if (!dbReady) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-bg relative px-6">
@@ -33,7 +27,6 @@ function App() {
       </div>
     );
   }
-
   return (
     <AppProvider>
       <Layout>
@@ -53,5 +46,4 @@ function App() {
     </AppProvider>
   );
 }
-
 export default App;

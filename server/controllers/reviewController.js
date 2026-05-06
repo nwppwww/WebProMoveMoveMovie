@@ -1,5 +1,4 @@
-const ReviewModel = require('../models/reviewModel')
-
+﻿const ReviewModel = require('../models/reviewModel')
 const reviewController = {
   getByLocation: (req, res) => {
     try {
@@ -8,13 +7,11 @@ const reviewController = {
       res.status(500).json({ error: err.message })
     }
   },
-
   create: (req, res) => {
     try {
       const { location_id, username, comment, rating } = req.body
       if (!location_id || !username || !comment || !rating)
         return res.status(400).json({ error: 'All fields are required' })
-
       const result = ReviewModel.create({
         location_id: Number(location_id),
         username, comment,
@@ -25,7 +22,6 @@ const reviewController = {
       res.status(500).json({ error: err.message })
     }
   },
-
   delete: (req, res) => {
     try {
       ReviewModel.delete(req.params.id)
@@ -35,5 +31,4 @@ const reviewController = {
     }
   }
 }
-
 module.exports = reviewController

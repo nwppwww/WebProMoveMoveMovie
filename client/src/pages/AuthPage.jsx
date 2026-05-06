@@ -1,21 +1,17 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, UserPlus, AlertCircle } from 'lucide-react';
 import { Field } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { AuthController } from '../services/db';
-
 const AuthPage = () => {
   const navigate = useNavigate();
   const { login, toast } = useAppContext();
-  
   const [tab, setTab] = useState('login');
   const [err, setErr] = useState('');
-  
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [name, setName] = useState('');
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setErr('');
@@ -29,7 +25,6 @@ const AuthPage = () => {
       setErr(ex.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
     }
   };
-
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!name || !email || !pass) return setErr('กรุณากรอกข้อมูลให้ครบถ้วน');
@@ -42,16 +37,13 @@ const AuthPage = () => {
       setErr(ex.message);
     }
   };
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-[100px] px-6">
       <div className="animate-fade-up bg-card border border-white/10 rounded-3xl p-10 w-full max-w-[420px] max-md:p-8 shrink-0">
-        
         <div className="text-center mb-8">
           <h1 className="font-serif text-[32px] m-0 mb-2">Move<span className="gold-text">Move</span>Movie</h1>
           <p className="text-muted text-[14px]">ระบบแนะนำสถานที่ถ่ายทำตามรอยภาพยนตร์</p>
         </div>
-
         <div className="flex border-b border-white/10 mb-7">
           {[['login', 'เข้าสู่ระบบ'], ['register', 'สมัครสมาชิก']].map(([v, l]) => (
             <button key={v} onClick={() => { setTab(v); setErr(''); }}
@@ -62,13 +54,11 @@ const AuthPage = () => {
             </button>
           ))}
         </div>
-
         {err && (
           <div className="bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 rounded-[10px] text-[13px] mb-6 flex items-center gap-2">
             <AlertCircle size={16} /> {err}
           </div>
         )}
-
         {tab === 'login' ? (
           <form onSubmit={handleLogin}>
             <Field label="อีเมล">
@@ -103,5 +93,4 @@ const AuthPage = () => {
     </div>
   );
 };
-
-export default AuthPage;
+export default AuthPage;

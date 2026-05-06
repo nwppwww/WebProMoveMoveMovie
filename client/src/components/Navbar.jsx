@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Film, Map, Gift, User, Settings, Megaphone, Clapperboard, LogOut, Star, Menu, X } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { PointController } from '../services/db';
-
 const Navbar = () => {
   const { user, logout } = useAppContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const page = location.pathname;
-
   const pts = user ? PointController.get(user.id) : 0;
-  
   const links = [
     { id: '/', l: 'หน้าหลัก', icon: Home },
     { id: '/movies', l: 'ภาพยนตร์', icon: Film },
@@ -24,24 +21,20 @@ const Navbar = () => {
     ...(user?.role === 'admin' ? [{ id: '/admin', l: 'Admin', icon: Settings }] : []),
     ...(user?.role === 'partner' ? [{ id: '/partner', l: 'Partner', icon: Megaphone }] : []),
   ];
-
   const navTo = (path) => {
     navigate(path);
     setMobileOpen(false);
   };
-
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-[1000] h-[62px] bg-[#07070F]/82 backdrop-blur-[22px] border-b border-gold/10">
         <div className="max-w-[1200px] mx-auto px-6 h-full flex items-center justify-between">
-          
           <button onClick={() => navTo('/')} className="bg-transparent border-none cursor-pointer flex items-center gap-[9px]">
             <Clapperboard className="text-gold" size={24} />
             <span className="font-serif text-[18px] text-main font-bold mt-1">
               movemovemovie
             </span>
           </button>
-          
           <div className="hidden md:flex items-center gap-0.5">
             {links.map(lk => {
               const active = page === lk.id || (lk.id !== '/' && page.startsWith(lk.id));
@@ -54,7 +47,6 @@ const Navbar = () => {
               );
             })}
           </div>
-
           <div className="flex items-center gap-[10px]">
             {user ? (
               <>
@@ -70,15 +62,13 @@ const Navbar = () => {
                 เข้าสู่ระบบ
               </button>
             )}
-            
             <button className="md:hidden flex flex-col gap-[5px] bg-transparent border-none cursor-pointer p-1" onClick={() => setMobileOpen(!mobileOpen)}>
                {mobileOpen ? <X className="text-muted" size={24}/> : <Menu className="text-muted" size={24}/>}
             </button>
           </div>
         </div>
       </nav>
-      
-      {/* Mobile Menu */}
+      {}
       {mobileOpen && (
         <div className="fixed top-[62px] left-0 right-0 z-[999] bg-[#07070F]/97 backdrop-blur-[20px] border-b border-gold/10 flex flex-col p-3 animate-fade-in md:hidden">
           {links.map(lk => {
@@ -96,5 +86,4 @@ const Navbar = () => {
     </>
   );
 };
-
-export default Navbar;
+export default Navbar;

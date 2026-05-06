@@ -1,9 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { User, Gift, Clock, Star, Edit2, Check, X, Heart, MapPin, CheckCircle, Ticket } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { PointController, UserDB, FavoriteController, CheckInController, TicketController, AdController, MovieController } from '../services/db';
-
 const ProfilePage = () => {
   const { user, toast, updateUser } = useAppContext();
   const navigate = useNavigate();
@@ -20,12 +19,9 @@ const ProfilePage = () => {
   const [tickets] = React.useState(() =>
     user ? TicketController.getUserTickets(user.id) : []
   );
-  // ✅ ย้ายมาไว้ก่อน conditional return เพื่อให้ถูกต้องตาม Rules of Hooks
   const [formError, setFormError] = React.useState('');
   const ads = AdController.list();
-
   const pts = PointController.get(user?.id);
-
   const fetchHistory = React.useCallback(async () => {
     if (!user) return;
     try {
@@ -35,22 +31,16 @@ const ProfilePage = () => {
       console.error('Failed to fetch name history:', err);
     }
   }, [user]);
-
   React.useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
-
-  // Sync newName when user data changes (e.g. initial load)
   React.useEffect(() => {
     if (user?.name) setNewName(user.name);
   }, [user?.name]);
-
   if (!user) return <Navigate to="/auth" replace />;
-
   const handleUpdateName = async (e) => {
     if (e) e.preventDefault();
     setFormError('');
-
     if (!newName.trim()) {
       setFormError('กรุณาระบุชื่อที่ต้องการเปลี่ยน');
       return;
@@ -59,7 +49,6 @@ const ProfilePage = () => {
       setIsEditing(false);
       return;
     }
-
     setLoading(true);
     try {
       const updated = await UserDB.updateName(user.id, newName.trim());
@@ -70,23 +59,18 @@ const ProfilePage = () => {
     } catch (err) {
       console.error('Update name error:', err);
       let errMsg = err.message || 'บันทึกข้อมูลไม่สำเร็จ';
-
-      // Translate common Supabase/Postgres errors to Thai
       if (errMsg.includes('Permission denied')) errMsg = 'ไม่มีสิทธิ์บันทึกข้อมูล (กรุณาเช็คการตั้งค่า RLS ใน Supabase)';
       if (errMsg.includes('foreign key constraint')) errMsg = 'ไม่พบข้อมูลผู้ใช้ในระบบหลัก';
       if (errMsg.includes('network')) errMsg = 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (Network Error)';
-
       setFormError(errMsg);
       toast(errMsg, 'error');
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="max-w-[800px] mx-auto mt-[140px] mb-[100px] px-6">
       <div className="animate-fade-up">
-
         <div className="flex items-center gap-6 mb-10 pb-10 border-b border-white/10 max-md:flex-col max-md:text-center max-md:gap-4 max-md:pb-6">
           <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-gold to-gold-dim text-[#07070F] flex items-center justify-center text-[40px] font-bold shrink-0 shadow-[0_0_30px_rgba(232,160,32,0.15)]">
             {user?.name?.charAt(0)?.toUpperCase() || '?'}
@@ -133,7 +117,6 @@ const ProfilePage = () => {
             </div>
           </div>
         </div>
-
         <div className="grid grid-cols-2 gap-8 max-md:grid-cols-1">
           <div>
             <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
@@ -145,7 +128,6 @@ const ProfilePage = () => {
               <div className="text-[14px] text-white/20">สะสมแต้มจากการเข้าร่วมกิจกรรมและนำมาแลกรางวัล!</div>
             </div>
           </div>
-
           <div>
             <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
               <Clock size={24} className="text-white/40" /> ประวัติการเปลี่ยนชื่อ
@@ -172,8 +154,7 @@ const ProfilePage = () => {
             </div>
           </div>
         </div>
-
-        {/* Privilege Tickets */}
+        {}
         {tickets.length > 0 && (
           <div className="mt-12">
             <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
@@ -213,8 +194,7 @@ const ProfilePage = () => {
             </div>
           </div>
         )}
-
-        {/* Favorite Locations */}
+        {}
         <div className="mt-12">
           <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
             <Heart size={24} style={{ fill: '#e8401f', stroke: '#e8401f' }} /> สถานที่โปรด
@@ -275,8 +255,7 @@ const ProfilePage = () => {
             </div>
           )}
         </div>
-
-        {/* Checked-in Locations */}
+        {}
         <div className="mt-12">
           <h2 className="font-serif text-[24px] mb-5 flex items-center gap-2">
             <CheckCircle size={24} className="text-green-400" /> สถานที่ที่เช็คอินแล้ว
@@ -316,10 +295,8 @@ const ProfilePage = () => {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
 };
-
-export default ProfilePage;
+export default ProfilePage;

@@ -1,9 +1,6 @@
-const db = require('./db')
-
+﻿const db = require('./db')
 const seed = () => {
   console.log('🌱 Seeding Thai movie data...\n')
-
-  // Thai movies matching the Movemovie.html theme
   const movies = [
     {
       tmdb_id: 141489, title: 'พี่มาก..พระโขนง',
@@ -30,7 +27,6 @@ const seed = () => {
       release_year: 2019
     }
   ]
-
   const insertMovie = db.prepare(`
     INSERT OR IGNORE INTO movies (tmdb_id, title, poster_path, overview, release_year)
     VALUES (@tmdb_id, @title, @poster_path, @overview, @release_year)
@@ -39,18 +35,14 @@ const seed = () => {
     insertMovie.run(m)
     console.log(`  🎬 ${m.title} (${m.release_year})`)
   })
-
-  // Get movie IDs for location seeding
   const pimak = db.prepare('SELECT id FROM movies WHERE tmdb_id = 141489').get()
   const badGenius = db.prepare('SELECT id FROM movies WHERE tmdb_id = 441331').get()
   const grandma = db.prepare('SELECT id FROM movies WHERE tmdb_id = 1001311').get()
   const krasue = db.prepare('SELECT id FROM movies WHERE tmdb_id = 456408').get()
-
   const insertLoc = db.prepare(`
     INSERT OR IGNORE INTO locations (movie_id, name, description, lat, lng)
     VALUES (?, ?, ?, ?, ?)
   `)
-
   if (pimak) {
     insertLoc.run(pimak.id, 'วัดมหาบุศย์ พระโขนง', 'วัดเก่าแก่ริมคลองพระโขนงอายุกว่า 200 ปี ถ่ายทำฉากสำคัญของพี่มาก บรรยากาศร่มรื่น', 13.7063, 100.6018)
     insertLoc.run(pimak.id, 'คลองพระโขนง', 'คลองที่ใช้ถ่ายทำฉากล่องเรือของมากและนาค บรรยากาศย้อนยุค', 13.7050, 100.6030)
@@ -68,8 +60,6 @@ const seed = () => {
     insertLoc.run(krasue.id, 'ทุ่งนาสุพรรณบุรี', 'ทุ่งนากว้างใหญ่ใช้ถ่ายทำแสงกระสือ บรรยากาศชนบทแท้จริง', 14.4744, 100.1177)
     console.log(`  📍 Added 1 location for แสงกระสือ`)
   }
-
   console.log('\n✅ Seed complete!')
 }
-
 seed()

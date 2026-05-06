@@ -1,52 +1,40 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Plus, Users, Film, MapPin, LayoutDashboard, Ticket, Check, Search } from 'lucide-react';
 import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { UserDB, MovieController, LocationController, AdController, TicketController, supabase } from '../services/db';
 import { Navigate, useNavigate } from 'react-router-dom';
-
-// Sub-components
 import MoviesTab from './admin/MoviesTab';
 import LocationsTab from './admin/LocationsTab';
 import AdsTab from './admin/AdsTab';
 import TicketsTab from './admin/TicketsTab';
 import UsersTab from './admin/UsersTab';
-
 const AdminPage = () => {
   const { user, toast, confirm, impersonate } = useAppContext();
   const navigate = useNavigate();
   const [tab, setTab] = useState('movies');
   const [updater, setUpdater] = useState(0);
   const [ticketSearch, setTicketSearch] = useState('');
-
   const [modalType, setModalType] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
-
-  // User edit modal
   const [userModal, setUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [userForm, setUserForm] = useState({});
-
   if (!user || user.role !== 'admin') {
     return <Navigate to="/auth" />;
   }
-
   const refresh = () => setUpdater(x => x + 1);
-
-  // --- Actions ---
   const handleEdit = (item, type) => {
     setEditingItem(item);
     setFormData(item);
     setModalType(type);
   };
-  
   const handleCreate = (type) => {
     setEditingItem(null);
     setFormData({});
     setModalType(type);
   };
-
   const handleDelete = (id, controller, typeName, displayName) => {
     confirm(`ยืนยันการลบ${typeName} "${displayName}" ออกจากระบบ?`, async () => {
       await controller.delete(id);
@@ -54,13 +42,11 @@ const AdminPage = () => {
       refresh();
     });
   };
-
   const handleToggleVis = async (id, controller) => {
     await controller.toggleVisibility(id);
     toast('เปลี่ยนสถานะการมองเห็นแล้ว');
     refresh();
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -81,27 +67,21 @@ const AdminPage = () => {
       toast(err.message || 'บันทึกข้อมูลไม่สำเร็จ', 'error');
     }
   };
-
-  // --- User management ---
   const handleEditUser = (u) => {
     setEditingUser(u);
     setUserForm({ name: u.name, email: u.email, role: u.role, password: '' });
     setUserModal(true);
   };
-
   const handleSaveUser = async (e) => {
     e.preventDefault();
     try {
       const updates = { name: userForm.name, email: userForm.email, role: userForm.role };
       if (userForm.password) updates.password = userForm.password;
-      
       const { data, error } = await supabase.from('users').update(updates).eq('id', editingUser.id).select().single();
       if (error) throw error;
-      
       const users = UserDB.list();
       const idx = users.findIndex(u => u.id === editingUser.id);
       if (idx !== -1) Object.assign(users[idx], data);
-      
       toast('แก้ไขข้อมูลผู้ใช้สำเร็จ');
       setUserModal(false);
       refresh();
@@ -109,7 +89,6 @@ const AdminPage = () => {
       toast(err.message || 'แก้ไขข้อมูลไม่สำเร็จ', 'error');
     }
   };
-
   const handleDeleteUser = (u) => {
     if (u.id === user.id) return toast('ไม่สามารถลบบัญชีตัวเองได้', 'error');
     confirm(`ยืนยันการลบบัญชี "${u.name}" (${u.email})?\nการกระทำนี้ไม่สามารถย้อนกลับได้`, async () => {
@@ -122,7 +101,6 @@ const AdminPage = () => {
       refresh();
     });
   };
-
   const handleImpersonate = (targetUser) => {
     confirm(`เข้าสู่ระบบแทน "${targetUser.name}" (${targetUser.email})?\nบทบาท: ${targetUser.role}`, () => {
       impersonate(targetUser);
@@ -130,13 +108,11 @@ const AdminPage = () => {
       navigate('/');
     }, 'info');
   };
-
   const movies = MovieController.list();
   const locations = LocationController.list();
   const ads = AdController.list();
   const users = UserDB.list();
   const tickets = TicketController.list();
-
   const filteredTickets = React.useMemo(() => {
     let list = tickets;
     if (ticketSearch) {
@@ -144,14 +120,12 @@ const AdminPage = () => {
     }
     return list.sort((a, b) => new Date(b.redeemedAt || b.redeemed_at) - new Date(a.redeemedAt || a.redeemed_at));
   }, [tickets, ticketSearch]);
-
   return (
     <div className="max-w-[1200px] mx-auto pt-[100px] pb-16 px-6">
       <div className="animate-fade-up">
         <h1 className="font-serif text-[36px] mb-8 flex items-center gap-3">
           <LayoutDashboard size={32} className="text-gold" /> จัดการระบบ <span className="gold-text">(Admin)</span>
         </h1>
-
         <div className="flex gap-2 border-b border-white/10 pb-4 mb-8 overflow-x-auto no-scrollbar">
           {[
             { id: 'movies', l: 'ภาพยนตร์', icon: Film },
@@ -166,7 +140,6 @@ const AdminPage = () => {
             </button>
           ))}
         </div>
-
         {tab === 'movies' && (
           <MoviesTab 
             movies={movies} 
@@ -175,7 +148,6 @@ const AdminPage = () => {
             onDelete={handleDelete} 
           />
         )}
-
         {tab === 'locations' && (
           <LocationsTab 
             locations={locations} 
@@ -186,7 +158,6 @@ const AdminPage = () => {
             onToggleVis={handleToggleVis} 
           />
         )}
-
         {tab === 'ads' && (
           <AdsTab 
             ads={ads} 
@@ -196,7 +167,6 @@ const AdminPage = () => {
             onCreate={() => handleCreate('ads')}
           />
         )}
-
         {tab === 'tickets' && (
           <TicketsTab 
             filteredTickets={filteredTickets} 
@@ -209,7 +179,6 @@ const AdminPage = () => {
             onDelete={handleDelete} 
           />
         )}
-
         {tab === 'users' && (
           <UsersTab 
             users={users} 
@@ -220,7 +189,6 @@ const AdminPage = () => {
           />
         )}
       </div>
-
       <Modal open={!!modalType} onClose={() => setModalType(null)} title={editingItem ? 'แก้ไขข้อมูล' : 'เพิ่มข้อมูลใหม่'}>
         <form onSubmit={handleSubmit}>
           {modalType === 'movies' && (
@@ -232,7 +200,6 @@ const AdminPage = () => {
               <Field label="เรื่องย่อ"><textarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="inp" /></Field>
             </>
           )}
-
           {modalType === 'ads' && (
             <>
               <Field label="หัวข้อ / ชื่อตั๋ว"><input required value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} className="inp" placeholder="เช่น ส่วนลด 30% ร้าน AAA..." /></Field>
@@ -240,7 +207,6 @@ const AdminPage = () => {
               <Field label="แต้มที่ใช้แลก (0 = ฟรี)"><input type="number" min="0" value={formData.pointsRequired ?? 0} onChange={e => setFormData({ ...formData, pointsRequired: parseInt(e.target.value) })} className="inp" /></Field>
             </>
           )}
-
           {modalType === 'locations' && (
             <>
               <Field label="ชื่อสถานที่"><input required value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="inp" /></Field>
@@ -262,7 +228,6 @@ const AdminPage = () => {
                 <Field label="จังหวัด" className="flex-1"><input required value={formData.province || ''} onChange={e => setFormData({ ...formData, province: e.target.value })} className="inp" /></Field>
                 <Field label="ประเภท" className="flex-1"><input required value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })} className="inp" placeholder="Temple, Beach, Cafe..."/></Field>
               </div>
-              
               <MapPicker 
                 lat={formData.lat} 
                 lng={formData.lng} 
@@ -270,7 +235,6 @@ const AdminPage = () => {
                   setFormData(prev => ({ ...prev, lat, lng, province: province || prev.province }));
                 }} 
               />
-
               <div className="flex gap-4 max-md:flex-col mt-4">
                 <Field label="ละติจูด (Lat)"><input type="number" step="0.0001" required value={formData.lat || ''} onChange={e => setFormData({ ...formData, lat: parseFloat(e.target.value) })} className="inp" /></Field>
                 <Field label="ลองจิจูด (Lng)"><input type="number" step="0.0001" required value={formData.lng || ''} onChange={e => setFormData({ ...formData, lng: parseFloat(e.target.value) })} className="inp" /></Field>
@@ -278,14 +242,12 @@ const AdminPage = () => {
               <Field label="รายละเอียด"><textarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="inp min-h-[80px]" /></Field>
             </>
           )}
-
           <div className="flex gap-3 mt-6">
             <button type="button" onClick={() => setModalType(null)} className="btn-ghost flex-1 py-3 rounded-xl">ยกเลิก</button>
             <button type="submit" className="btn-gold flex-1 py-3 rounded-xl">บันทึกข้อมูล</button>
           </div>
         </form>
       </Modal>
-
       <Modal open={userModal} onClose={() => setUserModal(false)} title={`แก้ไขข้อมูลผู้ใช้: ${editingUser?.name}`}>
         <form onSubmit={handleSaveUser}>
           <Field label="ชื่อ-นามสกุล">
@@ -313,5 +275,4 @@ const AdminPage = () => {
     </div>
   );
 };
-
-export default AdminPage;
+export default AdminPage;

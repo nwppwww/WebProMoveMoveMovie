@@ -1,8 +1,6 @@
-const Database = require('better-sqlite3')
+﻿const Database = require('better-sqlite3')
 const path = require('path')
-
 const db = new Database(path.join(__dirname, 'film_locations.db'))
-
 db.exec(`
   CREATE TABLE IF NOT EXISTS movies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -12,7 +10,6 @@ db.exec(`
     overview TEXT,
     release_year INTEGER
   );
-
   CREATE TABLE IF NOT EXISTS locations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     movie_id INTEGER NOT NULL,
@@ -24,7 +21,6 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (movie_id) REFERENCES movies(id)
   );
-
   CREATE TABLE IF NOT EXISTS reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     location_id INTEGER NOT NULL,
@@ -35,5 +31,4 @@ db.exec(`
     FOREIGN KEY (location_id) REFERENCES locations(id)
   );
 `)
-
 module.exports = db

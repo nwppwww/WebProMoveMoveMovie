@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+﻿import React, { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LeafletMap } from '../components/UI';
 import { Map, Star, MapPin, Heart } from 'lucide-react';
@@ -6,20 +6,16 @@ import { LocationController, MovieController, ReviewController, FavoriteControll
 import { locationAPI, movieAPI } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import { Shimmer } from '../components/UI';
-
 const ExploreMapPage = () => {
   const navigate = useNavigate();
   const { user, toast, setGlobalError } = useAppContext();
   const [locs, setLocs] = useState([]);
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [favoritedIds, setFavoritedIds] = useState(() =>
     new Set(user ? FavoriteController.getUserFavorites(user.id) : [])
   );
   const [togglingId, setTogglingId] = useState(null);
-
-  // Fetch directly from API using Axios for Rubric fulfillment
   React.useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -39,7 +35,6 @@ const ExploreMapPage = () => {
     };
     fetchData();
   }, []);
-
   const handleToggleFavorite = useCallback(async (e, locationId) => {
     e.stopPropagation();
     if (!user) {
@@ -61,25 +56,18 @@ const ExploreMapPage = () => {
       setTogglingId(null);
     }
   }, [user, toast]);
-
   const locsWithMovies = useMemo(() => {
     if (loading) return [];
     return locs.map(loc => {
-      // Still using ReviewController for brevity, or could fetch these too
       const revs = ReviewController.list(loc.id);
       const avgRating = revs.length > 0 ? (revs.reduce((a, r) => a + r.rating, 0) / revs.length).toFixed(1) : null;
-
       const movie = movies.find(m => {
-        // Find if any scene for this movie matches this location
-        // Here we can use the local Scene relation or just check
         const scenes = MovieController.scenes(m.id);
         return scenes.some(s => s.locationId === loc.id);
       });
-
       return { ...loc, movieTitle: movie?.title || 'ไม่ระบุ', avgRating };
     });
   }, [locs, movies, loading]);
-
   if (loading) {
     return (
       <div className="max-w-[1200px] mx-auto pt-[100px] px-6">
@@ -91,18 +79,15 @@ const ExploreMapPage = () => {
       </div>
     );
   }
-
   return (
     <div className="max-w-[1200px] mx-auto pt-[100px] px-6 pb-16">
       <div className="animate-fade-up">
-
         <h1 className="font-serif text-[42px] m-0 mb-1.5 flex items-center gap-3">
           <Map size={36} className="text-gold" /> สำรวจ<span className="gold-text">แผนที่</span>
         </h1>
         <p className="text-muted mb-8 text-[15px]">
           สถานที่ถ่ายทำภาพยนตร์ทั้งหมดบนแผนที่ — คลิกหมุดเพื่อดูรายละเอียด
         </p>
-
         <div className="mb-9">
           <LeafletMap
             locations={locsWithMovies}
@@ -111,12 +96,10 @@ const ExploreMapPage = () => {
             onMarkerClick={(loc) => navigate(`/location/${loc.id}`)}
           />
         </div>
-
         <h2 className="font-serif text-[24px] m-0 mt-9 mb-4 flex items-center gap-2">
           <MapPin size={22} className="text-gold" />
           สถานที่ทั้งหมด ({locs.length})
         </h2>
-
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3.5">
           {locsWithMovies.map(loc => {
             const isFav = favoritedIds.has(loc.id);
@@ -129,12 +112,10 @@ const ExploreMapPage = () => {
                 <div className="w-11 h-11 rounded-xl bg-gold/10 flex items-center justify-center text-gold shrink-0">
                   <MapPin size={22} />
                 </div>
-
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-[14px] mb-1 text-main truncate">{loc.name}</div>
                   <div className="text-muted text-[12px] truncate">{loc.province} • <span className="gold-text">🎬 {loc.movieTitle}</span></div>
                 </div>
-
                 <div className="ml-auto shrink-0 pl-2 flex items-center gap-2">
                   {loc.avgRating && (
                     <span className="inline-flex items-center gap-1 bg-gold/10 rounded-lg px-2.5 py-1 text-[13px] text-gold font-bold">
@@ -169,10 +150,8 @@ const ExploreMapPage = () => {
             );
           })}
         </div>
-
       </div>
     </div>
   );
 };
-
-export default ExploreMapPage;
+export default ExploreMapPage;

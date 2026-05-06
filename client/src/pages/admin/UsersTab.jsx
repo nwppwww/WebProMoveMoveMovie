@@ -1,6 +1,5 @@
-import React from 'react';
+﻿import React from 'react';
 import { Edit2, Shield, LogIn, Trash2 } from 'lucide-react';
-
 const UsersTab = ({ users, currentUser, onEditUser, onImpersonate, onDeleteUser }) => {
   return (
     <div>
@@ -50,5 +49,4 @@ const UsersTab = ({ users, currentUser, onEditUser, onImpersonate, onDeleteUser 
     </div>
   );
 };
-
-export default UsersTab;
+export default UsersTab;

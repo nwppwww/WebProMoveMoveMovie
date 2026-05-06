@@ -1,34 +1,25 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { Megaphone, Plus, Edit2, Trash2, Eye, EyeOff, MapPin, Search, ChevronDown, Star, Ticket, Check } from 'lucide-react';
 import { Modal, Field, MapPicker } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { AdController, LocationController, MovieController, TicketController, UserDB } from '../services/db';
-
 const PartnerPage = () => {
   const { user, toast, confirm } = useAppContext();
   const [updater, setUpdater] = useState(0);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAd, setEditingAd] = useState(null);
   const [formData, setFormData] = useState({});
-  
-  // Location selection states
   const [locSearch, setLocSearch] = useState('');
   const [showLocDropdown, setShowLocDropdown] = useState(false);
-
   if (!user || user.role !== 'partner') {
     return <div className="text-center py-[120px] px-6"><h3 className="text-[20px]">ไม่มีสิทธิ์เข้าถึงหน้านี้ เฉพาะ Partner เท่านั้น</h3></div>;
   }
-
   const refresh = () => setUpdater(x => x + 1);
-
   const [tab, setTab] = useState('campaigns');
   const [ticketSearch, setTicketSearch] = useState('');
-
   const myAds = AdController.list().filter(a => a.partnerId === user.id);
   const myTickets = TicketController.list().filter(t => myAds.some(a => a.id === t.adId || a.id === t.adid));
   const users = UserDB.list();
-
   const filteredTickets = useMemo(() => {
     let list = myTickets;
     if (ticketSearch) {
@@ -36,11 +27,8 @@ const PartnerPage = () => {
     }
     return list.sort((a, b) => new Date(b.redeemedAt || b.redeemed_at) - new Date(a.redeemedAt || a.redeemed_at));
   }, [myTickets, ticketSearch]);
-
   const allLocations = LocationController.list();
   const allMovies = MovieController.list();
-
-  // Combine locations with their movie titles for easier searching
   const searchableLocations = useMemo(() => {
     return allLocations.map(loc => {
       const movie = allMovies.find(m => m.id === loc.movieId);
@@ -50,7 +38,6 @@ const PartnerPage = () => {
       };
     });
   }, [allLocations, allMovies]);
-
   const filteredLocations = useMemo(() => {
     if (!locSearch) return searchableLocations.slice(0, 10);
     const s = locSearch.toLowerCase();
@@ -60,21 +47,18 @@ const PartnerPage = () => {
       l.province?.toLowerCase().includes(s)
     ).slice(0, 15);
   }, [searchableLocations, locSearch]);
-
   const handleEdit = (ad) => {
     setEditingAd(ad);
     setFormData(ad);
     setLocSearch('');
     setModalOpen(true);
   };
-  
   const handleCreate = () => {
     setEditingAd(null);
     setFormData({});
     setLocSearch('');
     setModalOpen(true);
   };
-
   const handleDelete = (id, displayName) => {
     confirm(`ยืนยันการลบตั๋วสิทธิพิเศษ "${displayName}" ออกจากระบบ?`, async () => {
       await AdController.delete(id);
@@ -82,19 +66,16 @@ const PartnerPage = () => {
       refresh();
     });
   };
-
   const handleToggleVis = (id) => {
     AdController.toggleVisibility(id);
     toast('เปลี่ยนสถานะตั๋วเรียบร้อย');
     refresh();
   };
-
   const handleToggleUsed = async (ticketId, currentState) => {
     await TicketController.markUsed(ticketId, !currentState);
     toast(!currentState ? 'ยืนยันการใช้สิทธิ์ตั๋วแล้ว' : 'ยกเลิกการใช้สิทธิ์แล้ว');
     refresh();
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -110,7 +91,6 @@ const PartnerPage = () => {
       toast(err.message || 'บันทึกตั๋วไม่สำเร็จ', 'error');
     }
   };
-
   const selectLocation = (loc) => {
     setFormData({
       ...formData,
@@ -121,11 +101,9 @@ const PartnerPage = () => {
     setLocSearch(`${loc.name} (${loc.movieTitle})`);
     setShowLocDropdown(false);
   };
-
   return (
     <div className="max-w-[1000px] mx-auto pt-[100px] pb-16 px-6">
       <div className="animate-fade-up">
-        
         <div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-start max-md:gap-4">
           <h1 className="font-serif text-[32px] m-0 flex items-center gap-3">
             <Ticket size={32} className="text-gold" /> จัดการสิทธิพิเศษ <span className="gold-text">(Partner)</span>
@@ -136,7 +114,6 @@ const PartnerPage = () => {
             </button>
           )}
         </div>
-
         <div className="flex gap-2 border-b border-white/10 pb-4 mb-8 overflow-x-auto no-scrollbar">
           <button onClick={() => setTab('campaigns')} className={`tab-item flex items-center gap-2 whitespace-nowrap min-w-max ${tab === 'campaigns' ? 'active' : ''}`}>
             <Megaphone size={16} /> คลังตั๋วสิทธิพิเศษของฉัน
@@ -145,7 +122,6 @@ const PartnerPage = () => {
             <Check size={16} /> ประวัติรับสิทธิ์
           </button>
         </div>
-
         {tab === 'campaigns' && (
           myAds.length > 0 ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5">
@@ -163,7 +139,6 @@ const PartnerPage = () => {
                       <button onClick={() => handleDelete(a.id, a.title)} className="btn-danger p-1.5 rounded-md"><Trash2 size={14} /></button>
                     </div>
                   </div>
-                  
                   <h3 className="font-serif text-[18px] mb-2 text-main">{a.title}</h3>
                   <p className="text-muted text-[14px] leading-[1.6] mb-4 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">{a.description}</p>
                   <div className="text-[12px] text-white/20 flex items-center gap-1.5"><MapPin size={12}/> พิกัด: {a.lat || '-'}, {a.lng || '-'}</div>
@@ -180,7 +155,6 @@ const PartnerPage = () => {
             </div>
           )
         )}
-
         {tab === 'tickets' && (
           <div>
             <div className="flex justify-between items-center mb-6 max-md:flex-col max-md:items-stretch gap-4">
@@ -197,7 +171,6 @@ const PartnerPage = () => {
                 <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
               </div>
             </div>
-            
             <div className="overflow-x-auto">
               <table>
                 <thead>
@@ -246,7 +219,6 @@ const PartnerPage = () => {
           </div>
         )}
       </div>
-
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingAd ? 'แก้ไขตั๋ว' : 'สร้างตั๋วสิทธิพิเศษใหม่'}>
         <form onSubmit={handleSubmit}>
           <Field label="ชื่อตั๋วสิทธิพิเศษ">
@@ -255,8 +227,7 @@ const PartnerPage = () => {
           <Field label="รายละเอียด">
             <textarea required value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="inp min-h-[80px]" placeholder="รับส่วนลด 20% เมื่อโชว์หน้าแอป..." />
           </Field>
-
-          {/* New Searchable Location Picker */}
+          {}
           <div className="mb-6 relative">
             <span className="text-[13px] text-muted mb-2 block font-medium">ค้นหาสถานที่ถ่ายทำ (ระบุตำแหน่งอัตโนมัติ)</span>
             <div className="relative">
@@ -273,7 +244,6 @@ const PartnerPage = () => {
                 onFocus={() => setShowLocDropdown(true)}
               />
               <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none opacity-50" />
-              
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 {locSearch && (
                   <button 
@@ -297,7 +267,6 @@ const PartnerPage = () => {
                 </button>
               </div>
             </div>
-
             {showLocDropdown && (
               <>
                 <div 
@@ -334,18 +303,15 @@ const PartnerPage = () => {
               </>
             )}
           </div>
-
           <MapPicker 
             lat={formData.lat} 
             lng={formData.lng} 
             onPick={(lat, lng) => setFormData({ ...formData, lat, lng })} 
           />
-
           <div className="flex gap-4 mt-4 max-md:flex-col">
              <Field label="ละติจูดเป้าหมาย"><input type="number" step="0.0001" value={formData.lat || ''} onChange={e => setFormData({ ...formData, lat: parseFloat(e.target.value) })} className="inp" /></Field>
              <Field label="ลองจิจูดเป้าหมาย"><input type="number" step="0.0001" value={formData.lng || ''} onChange={e => setFormData({ ...formData, lng: parseFloat(e.target.value) })} className="inp" /></Field>
           </div>
-
           <div className="mt-4">
              <Field label="ภาพยนตร์ที่ร่วมรายการ (ใช้ในการคัดกรองตั๋ว)">
                <select 
@@ -360,13 +326,11 @@ const PartnerPage = () => {
                </select>
              </Field>
           </div>
-
           <div className="mt-4">
              <Field label="คะแนนที่ใช้แลกเป็นตั๋ว (ใส่ 0 หากเป็นสิทธิพิเศษรับฟรี)">
                <input type="number" min="0" value={formData.pointsRequired || ''} onChange={e => setFormData({ ...formData, pointsRequired: parseInt(e.target.value) || 0 })} className="inp" placeholder="เช่น 500" />
              </Field>
           </div>
-          
           <div className="flex gap-3 mt-6">
             <button type="button" onClick={() => setModalOpen(false)} className="btn-ghost flex-1 py-3 rounded-xl block text-center">ยกเลิก</button>
             <button type="submit" className="btn-gold flex-1 py-3 rounded-xl block text-center">บันทึกข้อมูล</button>
@@ -376,5 +340,4 @@ const PartnerPage = () => {
     </div>
   );
 };
-
-export default PartnerPage;
+export default PartnerPage;

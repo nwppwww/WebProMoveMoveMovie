@@ -1,7 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Search, Trash2, Check } from 'lucide-react';
 import { TicketController } from '../../services/db';
-
 const TicketsTab = ({ filteredTickets, ads, users, ticketSearch, setTicketSearch, onRefresh, onToast, onDelete }) => {
   return (
     <div>
@@ -56,5 +55,4 @@ const TicketsTab = ({ filteredTickets, ads, users, ticketSearch, setTicketSearch
     </div>
   );
 };
-
-export default TicketsTab;
+export default TicketsTab;

@@ -1,7 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Edit2, Trash2, Plus, Film } from 'lucide-react';
 import { MovieController } from '../../services/db';
-
 const MoviesTab = ({ movies, onEdit, onCreate, onDelete }) => {
   return (
     <div>
@@ -32,5 +31,4 @@ const MoviesTab = ({ movies, onEdit, onCreate, onDelete }) => {
     </div>
   );
 };
-
-export default MoviesTab;
+export default MoviesTab;

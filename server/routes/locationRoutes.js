@@ -1,12 +1,10 @@
-const express = require('express')
+﻿const express = require('express')
 const router = express.Router()
 const c = require('../controllers/locationController')
-
 router.get('/', c.getAll)
 router.get('/movie/:tmdbId', c.getByMovieTmdbId)
 router.get('/:id', c.getById)
 router.post('/', c.create)
 router.put('/:id', c.update)
 router.delete('/:id', c.delete)
-
 module.exports = router

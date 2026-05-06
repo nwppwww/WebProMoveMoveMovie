@@ -1,23 +1,18 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Gift, Star, Clock, Ticket, MapPin, CheckCircle } from 'lucide-react';
 import { Modal } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { RewardController, PointController, AdController, TicketController, LocationController, MovieController } from '../services/db';
 import { useNavigate } from 'react-router-dom';
-
 const RewardsPage = () => {
   const { user, toast } = useAppContext();
   const navigate = useNavigate();
-  
   const rawRewards = RewardController.list();
   const rewards = rawRewards.filter(r => !r.hidden);
-  
   const rawAds = AdController.list();
   const campaigns = rawAds.filter(a => !a.hidden);
-  
   const [targetItem, setTargetItem] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
   const handleRedeem = async () => {
     if (!targetItem) return;
     setIsProcessing(true);
@@ -43,9 +38,7 @@ const RewardsPage = () => {
       setIsProcessing(false);
     }
   };
-
   const pts = user ? PointController.get(user.id) : 0;
-
   if (!user) {
     return (
       <div className="text-center py-[120px] px-6 text-muted">
@@ -54,11 +47,9 @@ const RewardsPage = () => {
       </div>
     );
   }
-
   return (
     <div className="max-w-[1200px] mx-auto pt-[100px] pb-16 px-6">
       <div className="animate-fade-up">
-
         <div className="bg-card border border-gold/10 rounded-3xl p-10 mb-[40px] flex justify-between items-center max-md:flex-col max-md:text-center max-md:gap-8 max-md:p-6">
           <div>
             <h1 className="font-serif text-[clamp(28px,4vw,42px)] m-0 mb-3 flex items-center gap-3 max-md:justify-center">
@@ -74,8 +65,7 @@ const RewardsPage = () => {
             </div>
           </div>
         </div>
-
-        {/* --- TICKETS SECTION --- */}
+        {}
         {campaigns.length > 0 && (
           <div className="mb-[60px]">
             <h2 className="font-serif text-[24px] mb-6 flex items-center gap-2">
@@ -108,8 +98,7 @@ const RewardsPage = () => {
             </div>
           </div>
         )}
-
-        {/* --- REWARDS SECTION --- */}
+        {}
         <div>
           <h2 className="font-serif text-[24px] mb-6 flex items-center gap-2">
             <Gift size={24} className="text-gold" /> ของที่ระลึกจากแอป
@@ -145,9 +134,7 @@ const RewardsPage = () => {
             <div className="text-center py-10 text-muted">ยังไม่มีของรางวัลในระบบขณะนี้</div>
           )}
         </div>
-
       </div>
-
       <Modal open={!!targetItem} onClose={() => !isProcessing && setTargetItem(null)} title="ยืนยันการแลกรับสิทธิ์">
         {targetItem && (
           <div>
@@ -165,7 +152,6 @@ const RewardsPage = () => {
                 }
               </p>
             </div>
-            
             <div className="flex gap-3 mt-8">
               <button onClick={() => setTargetItem(null)} disabled={isProcessing} className="btn-ghost flex-1 py-3 rounded-xl disabled:opacity-50">ยกเลิก</button>
               <button 
@@ -181,5 +167,4 @@ const RewardsPage = () => {
     </div>
   );
 };
-
-export default RewardsPage;
+export default RewardsPage;

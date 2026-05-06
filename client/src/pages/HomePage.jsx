@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Heart, ChevronRight, PlayCircle } from 'lucide-react';
 import { Particles } from '../components/UI';
@@ -6,7 +6,6 @@ import { MovieController, LocationController, FavoriteController } from '../serv
 import { movieAPI, locationAPI } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import { Shimmer } from '../components/UI';
-
 const HomePage = () => {
   const navigate = useNavigate();
   const { user, toast, setGlobalError } = useAppContext();
@@ -14,30 +13,25 @@ const HomePage = () => {
   const [popMovies, setPopMovies] = useState([]);
   const [popLocations, setPopLocations] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [favoritedIds, setFavoritedIds] = useState(() => {
     if (!user) return new Set();
     return new Set(FavoriteController.getUserFavorites(user.id));
   });
   const [togglingId, setTogglingId] = useState(null);
-
   React.useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [mRes, lRes] = await Promise.all([
           movieAPI.getPopular(),
-          locationAPI.getAll() // Slice manually or can use SB filter
+          locationAPI.getAll() 
         ]);
-
-        // Normalize keys
         const normalizedMovies = (mRes.data || []).map(m => ({
           ...m,
           releaseYear: m.releaseyear || m.release_year
         }));
-
         setPopMovies(normalizedMovies);
-        setPopLocations((lRes.data || []).slice(0, 6)); // Top 6 locations
+        setPopLocations((lRes.data || []).slice(0, 6)); 
       } catch (err) {
         console.error('Fetch error:', err);
         setGlobalError('ไม่สามารถโหลดข้อมูลหน้าแรกได้ กรุณาลองใหม่อีกครั้ง');
@@ -47,14 +41,12 @@ const HomePage = () => {
     };
     fetchData();
   }, []);
-
   const handleSearch = (e) => {
     e.preventDefault();
     navigate(`/movies?q=${encodeURIComponent(q)}`);
   };
-
   const handleToggleFavorite = useCallback(async (e, locationId) => {
-    e.stopPropagation(); // don't navigate to location page
+    e.stopPropagation(); 
     if (!user) {
       toast('กรุณาเข้าสู่ระบบก่อนเพิ่มสถานที่โปรด', 'error');
       return;
@@ -79,27 +71,22 @@ const HomePage = () => {
       setTogglingId(null);
     }
   }, [user, toast]);
-
   return (
     <div>
       <div className="hero-bg min-h-[93vh] flex flex-col items-center justify-center text-center pt-[76px] pb-[60px] px-6">
         <Particles count={25} />
-
         <div className="animate-fade-up delay-100 relative z-10">
           <span className="badge mb-5">
             <PlayCircle size={12} className="inline mr-1 align-middle" />
             ระบบแนะนำสถานที่ถ่ายทำตามรอยภาพยนตร์
           </span>
         </div>
-
         <h1 className="animate-fade-up delay-200 font-serif text-[clamp(38px,7vw,76px)] leading-[1.1] m-0 mb-4 max-w-[820px] relative z-10">
           ตามรอย<span className="gold-text">ภาพยนตร์</span><br />ในสถานที่จริง
         </h1>
-
         <p className="animate-fade-up delay-300 text-[17px] text-muted max-w-[500px] m-0 mb-9 leading-[1.75] relative z-10">
           ค้นพบสถานที่ถ่ายทำหนังและซีรีส์ไทยที่คุณชื่นชอบ<br />พร้อมรีวิวจากผู้ที่ไปตามรอยจริง
         </p>
-
         <form onSubmit={handleSearch} className="animate-fade-up delay-400 relative w-full max-w-[500px] z-10">
           <input
             type="text"
@@ -113,7 +100,6 @@ const HomePage = () => {
           </button>
         </form>
       </div>
-
       <div className="max-w-[1400px] mx-auto px-6 py-[60px]">
         <div className="flex justify-between items-center mb-7">
           <h2 className="font-serif text-[26px] m-0">ภาพยนตร์<span className="gold-text">ยอดฮิต</span></h2>
@@ -121,7 +107,6 @@ const HomePage = () => {
             ดูทั้งหมด <ChevronRight size={14} />
           </button>
         </div>
-
         <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-5 max-md:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] max-md:gap-3.5 2xl:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
           {loading ? (
             [1, 2, 3, 4].map(i => <Shimmer key={i} h={280} r={16} />)
@@ -146,7 +131,6 @@ const HomePage = () => {
             </div>
           ))}
         </div>
-
         {popLocations.length > 0 && (
           <div className="mt-20">
             <h2 className="font-serif text-[26px] m-0 mb-7">สถานที่<span className="gold-text">ยอดนิยม</span></h2>
@@ -208,5 +192,4 @@ const HomePage = () => {
     </div>
   );
 };
-
-export default HomePage;
+export default HomePage;

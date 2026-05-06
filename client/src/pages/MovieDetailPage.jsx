@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar, MapPin, Film } from 'lucide-react';
 import { Shimmer, Particles } from '../components/UI';
 import { MovieController, LocationController } from '../services/db';
 import { movieAPI } from '../services/api';
-
 const MovieDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -12,7 +11,6 @@ const MovieDetailPage = () => {
   const [scenes, setScenes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -21,7 +19,6 @@ const MovieDetailPage = () => {
           movieAPI.getById(id),
           movieAPI.getScenes(id)
         ]);
-
         if (mRes.data && mRes.data.length > 0) {
           const m = mRes.data[0];
           const normalized = {
@@ -30,8 +27,6 @@ const MovieDetailPage = () => {
           };
           setMovie(normalized);
           document.title = `movemovemovie | ${normalized.title || 'หนัง'}`;
-
-          // Normalize scenes (movieid -> movieId, locationid -> locationId)
           const normScenes = sRes.data.map(s => ({
             ...s,
             movieId: s.movieid,
@@ -47,11 +42,9 @@ const MovieDetailPage = () => {
         setLoading(false);
       }
     };
-
     fetchData();
     return () => { document.title = 'movemovemovie'; };
   }, [id]);
-
   if (loading) {
     return (
       <div className="max-w-[1000px] mx-auto py-[100px] px-6">
@@ -62,7 +55,6 @@ const MovieDetailPage = () => {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="text-center py-[120px] px-5">
@@ -80,7 +72,6 @@ const MovieDetailPage = () => {
       </div>
     );
   }
-
   if (!movie) {
     return (
       <div className="text-center py-[120px] px-5 text-muted">
@@ -91,10 +82,9 @@ const MovieDetailPage = () => {
       </div>
     );
   }
-
   return (
     <>
-      {/* Hero Section */}
+      {}
       <div className="relative h-[60vh] min-h-[400px]">
         <div className="absolute inset-0 bg-[#0D0D1A]">
           <img
@@ -107,7 +97,6 @@ const MovieDetailPage = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(7,7,15,0.4)] to-[#07070F]" />
         </div>
         <Particles count={15} />
-
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-[60px]">
           <div className="max-w-[1000px] mx-auto">
             <button className="btn-ghost flex items-center gap-1.5 px-4 py-2 rounded-[20px] mb-6 text-[13px]" onClick={() => navigate(-1)}>
@@ -123,13 +112,11 @@ const MovieDetailPage = () => {
           </div>
         </div>
       </div>
-
       <div className="max-w-[1000px] mx-auto px-6 pb-[80px]">
         <div className="animate-fade-up delay-200 mb-[60px]">
           <h2 className="font-serif text-[24px] m-0 mb-4">เรื่องย่อ</h2>
           <p className="text-[#A8A5B4] leading-[1.8] text-[16px] m-0 max-w-[800px]">{movie.description}</p>
         </div>
-
         <div className="animate-fade-up delay-300">
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-serif text-[28px] m-0">
@@ -137,13 +124,11 @@ const MovieDetailPage = () => {
             </h2>
             <span className="badge badge-gray">{scenes.length} สถานที่</span>
           </div>
-
           <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
             {scenes.length > 0 ? (
               scenes.map(scene => {
                 const locData = LocationController.get(scene.locationId);
                 const locName = locData ? locData.name : 'ดูรายละเอียดสถานที่';
-
                 return (
                   <div key={scene.id} className="card-hover bg-card border border-white/5 rounded-2xl overflow-hidden cursor-pointer" onClick={() => navigate(`/location/${scene.locationId}`)}>
                     <div className="h-[200px] relative">
@@ -174,5 +159,4 @@ const MovieDetailPage = () => {
     </>
   );
 };
-
-export default MovieDetailPage;
+export default MovieDetailPage;

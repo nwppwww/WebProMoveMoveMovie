@@ -1,7 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Edit2, Trash2, Plus, Eye, EyeOff, MapPin } from 'lucide-react';
 import { LocationController } from '../../services/db';
-
 const LocationsTab = ({ locations, movies, onEdit, onCreate, onDelete, onToggleVis }) => {
   return (
     <div>
@@ -34,5 +33,4 @@ const LocationsTab = ({ locations, movies, onEdit, onCreate, onDelete, onToggleV
     </div>
   );
 };
-
-export default LocationsTab;
+export default LocationsTab;

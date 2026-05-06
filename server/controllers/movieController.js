@@ -1,9 +1,7 @@
-const axios = require('axios')
+﻿const axios = require('axios')
 const MovieModel = require('../models/movieModel')
-
 const TMDB_BASE = 'https://api.themoviedb.org/3'
 const API_KEY = process.env.TMDB_API_KEY
-
 const movieController = {
   search: async (req, res) => {
     try {
@@ -17,7 +15,6 @@ const movieController = {
       res.status(500).json({ error: err.message })
     }
   },
-
   getPopular: async (req, res) => {
     try {
       const response = await axios.get(`${TMDB_BASE}/movie/popular`, {
@@ -28,7 +25,6 @@ const movieController = {
       res.status(500).json({ error: err.message })
     }
   },
-
   getById: async (req, res) => {
     try {
       const { tmdbId } = req.params
@@ -49,5 +45,4 @@ const movieController = {
     }
   }
 }
-
 module.exports = movieController

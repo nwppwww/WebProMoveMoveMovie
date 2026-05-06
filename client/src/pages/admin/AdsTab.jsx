@@ -1,7 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { Eye, EyeOff, Trash2, Plus } from 'lucide-react';
 import { AdController } from '../../services/db';
-
 const AdsTab = ({ ads, users, onToggleVis, onDelete, onCreate }) => {
   return (
     <div>
@@ -44,5 +43,4 @@ const AdsTab = ({ ads, users, onToggleVis, onDelete, onCreate }) => {
     </div>
   );
 };
-
-export default AdsTab;
+export default AdsTab;

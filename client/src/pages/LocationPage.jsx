@@ -1,37 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Tag, MessagesSquare, Map, Star, Compass, CheckCircle, Heart } from 'lucide-react';
 import { Shimmer, LeafletMap, Stars, Field } from '../components/UI';
 import { useAppContext } from '../context/AppContext';
 import { LocationController, AdController, ReviewController, MovieController, FavoriteController, CheckInController } from '../services/db';
-
 const LocationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, toast } = useAppContext();
-
   const [loc, setLoc] = useState(null);
   const [ads, setAds] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Favorite state
   const [isFav, setIsFav] = useState(false);
   const [favToggling, setFavToggling] = useState(false);
-
-  // Check-in states
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
-
-  // Form states
   const [reviewText, setReviewText] = useState('');
   const [reviewStars, setReviewStars] = useState(0);
-
   useEffect(() => {
     setLoading(true);
     const parsedId = parseInt(id);
-
     const localData = LocationController.get(parsedId);
     if (localData) {
       setLoc(localData);
@@ -44,29 +34,21 @@ const LocationPage = () => {
       setMovies(relatedMovies);
       if (user) setIsFav(FavoriteController.isFavorite(user.id, parsedId));
     }
-
-    // Check real check-in status from DB (prevents bypass via page refresh)
     const checkStatus = async () => {
       if (user) {
-        // First check cache for speed
         const cachedCheckedIn = CheckInController.hasCheckedIn(user.id, parsedId);
         if (cachedCheckedIn) {
           setHasCheckedIn(true);
         } else {
-          // Verify from DB to catch cases where cache is stale
           const dbCheckedIn = await CheckInController.hasCheckedInDB(user.id, parsedId);
           setHasCheckedIn(dbCheckedIn);
         }
       }
       setLoading(false);
     };
-
-    // Small delay to let UI render first
     setTimeout(() => { checkStatus(); }, 300);
-
     return () => { document.title = 'Move\u00b3Movie'; };
   }, [id, user]);
-
   const handleToggleFavorite = useCallback(async () => {
     if (!user) return toast('กรุณาเข้าสู่ระบบก่อนเพิ่มสถานที่โปรด', 'error');
     setFavToggling(true);
@@ -80,12 +62,10 @@ const LocationPage = () => {
       setFavToggling(false);
     }
   }, [user, id, toast]);
-
   const submitReview = async (e) => {
     e.preventDefault();
     if (!user) return toast('กรุณาเข้าสู่ระบบก่อนเขียนรีวิว', 'error');
     if (!reviewText || !reviewStars) return toast('กรุณาระบุคะแนนและข้อความ', 'error');
-
     try {
       const nw = await ReviewController.add({ userId: user.id, userName: user.name, locationId: parseInt(id), rating: reviewStars, comment: reviewText });
       setReviews(prev => [nw, ...prev]);
@@ -95,22 +75,17 @@ const LocationPage = () => {
       toast('เกิดข้อผิดพลาด: ' + err.message, 'error');
     }
   };
-
   const handleCheckIn = () => {
     if (!user) return toast('\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e23\u0e30\u0e1a\u0e1a\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e0a\u0e47\u0e04\u0e2d\u0e34\u0e19', 'error');
     if (hasCheckedIn) return toast('\u0e04\u0e38\u0e13\u0e44\u0e14\u0e49\u0e40\u0e0a\u0e47\u0e04\u0e2d\u0e34\u0e19\u0e2a\u0e16\u0e32\u0e19\u0e17\u0e35\u0e48\u0e19\u0e35\u0e49\u0e44\u0e1b\u0e41\u0e25\u0e49\u0e27 (1 \u0e2a\u0e16\u0e32\u0e19\u0e17\u0e35\u0e48 / 1 \u0e1a\u0e31\u0e0d\u0e0a\u0e35)', 'error');
-
     if (!navigator.geolocation) {
       return toast('\u0e40\u0e1a\u0e23\u0e32\u0e27\u0e4c\u0e40\u0e0b\u0e2d\u0e23\u0e4c\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e44\u0e21\u0e48\u0e23\u0e2d\u0e07\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e23\u0e30\u0e1a\u0e38\u0e15\u0e33\u0e41\u0e2b\u0e19\u0e48\u0e07', 'error');
     }
-
     setIsCheckingIn(true);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
-
-        // Haversine formula
         const R = 6371;
         const dLat = (loc.lat - userLat) * (Math.PI / 180);
         const dLng = (loc.lng - userLng) * (Math.PI / 180);
@@ -120,7 +95,6 @@ const LocationPage = () => {
           Math.sin(dLng / 2) * Math.sin(dLng / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c;
-
         if (distance <= 5) {
           try {
             const result = await CheckInController.checkIn(user.id, parseInt(id), 500);
@@ -150,7 +124,6 @@ const LocationPage = () => {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
-
   if (loading) {
     return (
       <div className="max-w-[800px] mx-auto mt-[140px] mb-[100px] px-6">
@@ -160,7 +133,6 @@ const LocationPage = () => {
       </div>
     );
   }
-
   if (!loc) {
     return (
       <div className="text-center py-[120px] px-5 text-muted">
@@ -171,26 +143,20 @@ const LocationPage = () => {
       </div>
     );
   }
-
   const avgRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : '0.0';
-
   return (
     <div className="max-w-[1000px] mx-auto pt-[100px] pb-[60px] px-6">
       <button className="btn-ghost px-4 py-2 rounded-[20px] mb-6 text-[13px] inline-flex items-center gap-1.5" onClick={() => navigate(-1)}>
         <ArrowLeft size={14} /> ย้อนกลับ
       </button>
-
       <div className="animate-fade-up">
-
         <div className="flex flex-col md:flex-row gap-10 mb-[60px]">
-
           <div className="flex-1">
             <div className="flex gap-3 mb-4">
               <span className="badge"><MapPin size={12} className="inline mr-1" /> {loc.province}</span>
               {loc.type && <span className="badge badge-gray"><Tag size={12} className="inline mr-1" /> {loc.type}</span>}
               <span className="badge bg-gold/10 border-gold/20 text-gold"><Star size={12} className="inline mr-1" /> {avgRating}</span>
             </div>
-
             <div className="flex items-start gap-4 mb-4">
               <h1 className="font-serif text-[clamp(32px,4vw,42px)] m-0 leading-[1.2] flex-1">{loc.name}</h1>
               <button
@@ -217,7 +183,6 @@ const LocationPage = () => {
             <p className="text-[#A8A5B4] leading-[1.85] text-[15px] mb-9 max-w-[680px]">
               {loc.description || 'ไม่มีคำอธิบาย'}
             </p>
-
             {loc.lat && loc.lng && (
               <div className="mb-10">
                 <LeafletMap locations={[loc]} center={[loc.lat, loc.lng]} zoom={15} height={300} />
@@ -230,7 +195,6 @@ const LocationPage = () => {
                   >
                     <Map size={18} /> นำทางด้วย Google Maps
                   </a>
-
                   <button
                     onClick={handleCheckIn}
                     disabled={isCheckingIn || hasCheckedIn}
@@ -251,8 +215,7 @@ const LocationPage = () => {
                 </div>
               </div>
             )}
-
-            {/* Ads Panel */}
+            {}
             {ads.length > 0 && (
               <div className="bg-gradient-to-tr from-gold/5 lg:via-gold/10 lg:to-gold/5 border border-gold/20 rounded-2xl p-6 mb-10">
                 <h3 className="font-serif text-gold text-[18px] mb-4 flex items-center gap-2">
@@ -268,12 +231,9 @@ const LocationPage = () => {
                 </div>
               </div>
             )}
-
           </div>
-
           <div className="w-full max-w-[320px] max-md:max-w-none">
-
-            {/* Related Movies */}
+            {}
             <div className="bg-card border border-white/5 rounded-2xl p-6 mb-6">
               <h3 className="font-serif text-[18px] mb-4">ปรากฏในภาพยนตร์</h3>
               {movies.length > 0 ? (
@@ -293,8 +253,7 @@ const LocationPage = () => {
                 <div className="text-[13px] text-muted">ไม่มีข้อมูลภาพยนตร์ที่แนบกับสถานที่นี้</div>
               )}
             </div>
-
-            {/* Review Form */}
+            {}
             <div className="bg-card border border-white/5 rounded-2xl p-6">
               <h3 className="font-serif text-[18px] mb-4">เขียนรีวิว</h3>
               {user ? (
@@ -314,11 +273,9 @@ const LocationPage = () => {
                 </div>
               )}
             </div>
-
           </div>
         </div>
-
-        {/* Reviews List */}
+        {}
         <div className="border-t border-white/5 pt-10">
           <h2 className="font-serif text-[24px] mb-6">รีวิวจากผู้ใช้งาน ({reviews.length})</h2>
           {reviews.length > 0 ? (
@@ -326,7 +283,6 @@ const LocationPage = () => {
               {reviews.map(r => {
                 const dateVal = r.createdAt || r.createdat;
                 const nameVal = r.userName || r.username || 'ผู้ใช้แอป';
-
                 return (
                   <div key={r.id} className="bg-card border border-white/5 rounded-2xl p-5 md:p-6">
                     <div className="flex justify-between items-start mb-4">
@@ -356,10 +312,8 @@ const LocationPage = () => {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
 };
-
 export default LocationPage;
